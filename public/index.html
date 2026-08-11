@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Перо — Литературная платформа и редактор книг</title>
-    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word с функциями удаления и сортировки глав.">
+    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, сохранение профиля автора и био в localStorage.">
     <!-- Google Fonts Expansion (All 12 Fonts) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -390,7 +390,6 @@
 
         .drag-handle { color: var(--muted-text); margin-right: 6px; cursor: grab; }
 
-        /* Delete Chapter Button */
         .delete-chapter-btn {
             border: none;
             background: transparent;
@@ -846,10 +845,6 @@
                                 <span style="display:flex; align-items:center;"><i class="fa-solid fa-grip-vertical drag-handle"></i> Глава 1. Пролог</span>
                                 <button class="delete-chapter-btn" onclick="deleteChapter(event, 0)" title="Удалить главу"><i class="fa-solid fa-trash-can"></i></button>
                             </li>
-                            <li class="chapter-card" onclick="selectEditorChapter(1, this)" draggable="true" ondragstart="dragChapterStart(event)" ondragover="dragChapterOver(event)" ondrop="dropChapterSwap(event)">
-                                <span style="display:flex; align-items:center;"><i class="fa-solid fa-grip-vertical drag-handle"></i> Глава 2. Встреча</span>
-                                <button class="delete-chapter-btn" onclick="deleteChapter(event, 1)" title="Удалить главу"><i class="fa-solid fa-trash-can"></i></button>
-                            </li>
                         </ul>
                     </div>
 
@@ -1051,7 +1046,7 @@
         </div>
     </div>
 
-    <!-- EDIT PROFILE MODAL -->
+    <!-- EDIT PROFILE MODAL (Saves Bio, Name, Username & Photo to localStorage) -->
     <div class="modal" id="editProfileModal">
         <div class="modal-content" style="max-width: 520px;">
             <button class="modal-close" onclick="closeEditProfileModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -1063,11 +1058,23 @@
                         <button class="btn-primary" style="padding: 6px 14px; font-size: 12px;" onclick="triggerAvatarUpload()"><i class="fa-solid fa-image"></i> Выбрать фото</button>
                     </div>
                 </div>
+
                 <div>
                     <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Имя автора:</label>
                     <input type="text" class="ai-textarea" id="editDisplayNameInput" value="Полина Сергеева">
                 </div>
-                <button class="btn-primary" style="justify-content: center;" onclick="saveAuthorProfile()"><i class="fa-solid fa-check"></i> Сохранить</button>
+
+                <div>
+                    <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Никнейм (@username):</label>
+                    <input type="text" class="ai-textarea" id="editUsernameInput" value="@polina_author">
+                </div>
+
+                <div>
+                    <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">О себе (Био автора):</label>
+                    <textarea class="ai-textarea" id="editBioInput" rows="4" placeholder="Расскажите о себе и вашем творчестве...">Начинающий автор. Напишите свою первую книгу, находите читателей и развивайте свой аккаунт!</textarea>
+                </div>
+
+                <button class="btn-primary" style="justify-content: center;" onclick="saveAuthorProfile()"><i class="fa-solid fa-check"></i> Сохранить профиль</button>
             </div>
         </div>
     </div>
@@ -1079,6 +1086,94 @@
     </footer>
 
     <script>
+        // State Object with LocalStorage Persistence
+        let authorState = {
+            name: "Полина Сергеева",
+            username: "@polina_author",
+            bio: "Начинающий автор. Напишите свою первую книгу, находите читателей и развивайте свой аккаунт!",
+            avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+            books: 0,
+            followers: 0,
+            likes: 0,
+            isFollowed: false,
+            theme: 'light'
+        };
+
+        const sampleChapters = [
+            { title: "Глава 1. Пролог", content: "<h1>Глава 1. Пролог</h1><p>Солнце медленно опускалось за вершины старого леса, отбрасывая длинные багровые тени на каменные плиты двора.</p>" }
+        ];
+
+        let activeChapterIndex = 0;
+
+        // Save All State to localStorage
+        function saveToLocalStorage() {
+            try {
+                // Save active document text
+                if (sampleChapters[activeChapterIndex]) {
+                    const editorEl = document.getElementById('paperEditor');
+                    if (editorEl) sampleChapters[activeChapterIndex].content = editorEl.innerHTML;
+                }
+
+                localStorage.setItem('pero_authorState', JSON.stringify(authorState));
+                localStorage.setItem('pero_sampleChapters', JSON.stringify(sampleChapters));
+            } catch(e) {
+                console.error("Storage error:", e);
+            }
+        }
+
+        // Load All State from localStorage
+        function loadFromLocalStorage() {
+            try {
+                const savedState = localStorage.getItem('pero_authorState');
+                if (savedState) {
+                    authorState = Object.assign(authorState, JSON.parse(savedState));
+                }
+
+                const savedChapters = localStorage.getItem('pero_sampleChapters');
+                if (savedChapters) {
+                    const parsed = JSON.parse(savedChapters);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        sampleChapters.length = 0;
+                        parsed.forEach(ch => sampleChapters.push(ch));
+                    }
+                }
+            } catch(e) {
+                console.error("Load storage error:", e);
+            }
+
+            applyLoadedStateUI();
+        }
+
+        function applyLoadedStateUI() {
+            // Bio & Profile Text
+            document.getElementById('authorDisplayName').innerText = authorState.name;
+            document.getElementById('authorUsername').innerText = authorState.username;
+            document.getElementById('authorBioText').innerText = authorState.bio;
+            document.getElementById('authorAvatar').src = authorState.avatar;
+            document.getElementById('modalAvatarPreview').src = authorState.avatar;
+
+            // Edit Modal Inputs
+            document.getElementById('editDisplayNameInput').value = authorState.name;
+            document.getElementById('editUsernameInput').value = authorState.username;
+            document.getElementById('editBioInput').value = authorState.bio;
+
+            // Counters
+            updateAuthorUI();
+
+            // Chapters List & Active Chapter Content
+            renderChaptersList();
+            if (sampleChapters[activeChapterIndex]) {
+                document.getElementById('paperEditor').innerHTML = sampleChapters[activeChapterIndex].content;
+            }
+
+            // Theme
+            if (authorState.theme === 'dark') {
+                document.documentElement.className = 'dark';
+                const icon = document.querySelector('#themeToggleBtn i');
+                if (icon) icon.className = 'fa-solid fa-sun';
+            }
+        }
+
         function triggerAvatarUpload() {
             document.getElementById('avatarFileInput').click();
         }
@@ -1090,23 +1185,37 @@
                 const reader = new FileReader();
                 reader.onload = function(event) {
                     const dataUrl = event.target.result;
+                    authorState.avatar = dataUrl;
                     document.getElementById('authorAvatar').src = dataUrl;
                     document.getElementById('modalAvatarPreview').src = dataUrl;
-                    alert('✨ Фото аватара загружено!');
+                    saveToLocalStorage();
+                    alert('✨ Новое фото аватара сохранено навсегда!');
                 };
                 reader.readAsDataURL(file);
             }
         }
 
-        const sampleChapters = [
-            { title: "Глава 1. Пролог", content: "<h1>Глава 1. Пролог</h1><p>Солнце медленно опускалось за вершины старого леса, отбрасывая длинные багровые тени на каменные плиты двора.</p>" },
-            { title: "Глава 2. Встреча", content: "<h1>Глава 2. Встреча</h1><p>Дверь старой библиотеки отворилась. На пороге стоял незнакомец в тёмном плаще.</p>" }
-        ];
+        function saveAuthorProfile() {
+            const name = document.getElementById('editDisplayNameInput').value.trim();
+            const username = document.getElementById('editUsernameInput').value.trim();
+            const bio = document.getElementById('editBioInput').value.trim();
 
-        let activeChapterIndex = 0;
+            if (name) authorState.name = name;
+            if (username) authorState.username = username;
+            authorState.bio = bio;
+
+            document.getElementById('authorDisplayName').innerText = authorState.name;
+            document.getElementById('authorUsername').innerText = authorState.username;
+            document.getElementById('authorBioText').innerText = authorState.bio;
+
+            saveToLocalStorage();
+            closeEditProfileModal();
+            alert('🎉 Профиль и био автора успешно сохранены!');
+        }
 
         function renderChaptersList() {
             const list = document.getElementById('chapterList');
+            if (!list) return;
             list.innerHTML = '';
 
             sampleChapters.forEach((ch, idx) => {
@@ -1134,7 +1243,6 @@
             if (confirm('Вы уверены, что хотите удалить «' + chTitle + '»?')) {
                 sampleChapters.splice(index, 1);
                 
-                // Re-number titles if standard
                 sampleChapters.forEach((c, i) => {
                     if (c.title.startsWith('Глава ')) {
                         c.title = c.title.replace(/Глава \d+/, 'Глава ' + (i + 1));
@@ -1145,6 +1253,7 @@
                     activeChapterIndex = sampleChapters.length - 1;
                 }
 
+                saveToLocalStorage();
                 renderChaptersList();
                 selectEditorChapter(activeChapterIndex, document.querySelectorAll('#chapterList .chapter-card')[activeChapterIndex]);
             }
@@ -1160,6 +1269,7 @@
             });
 
             activeChapterIndex = sampleChapters.length - 1;
+            saveToLocalStorage();
             renderChaptersList();
             selectEditorChapter(activeChapterIndex, document.querySelectorAll('#chapterList .chapter-card')[activeChapterIndex]);
         }
@@ -1202,6 +1312,7 @@
         function applyAiText() {
             if (!currentGeneratedAiHtml) return;
             formatDoc('insertHTML', '<p style="margin: 12px 0;">' + currentGeneratedAiHtml + '</p>');
+            saveToLocalStorage();
             alert('✨ Текст AI успешно вставлен!');
         }
 
@@ -1209,8 +1320,6 @@
             navigator.clipboard.writeText(document.getElementById('aiResultContent').innerText);
             alert('Текст AI скопирован!');
         }
-
-        let authorState = { books: 0, followers: 0, likes: 0, isFollowed: false };
 
         function updateAuthorUI() {
             document.getElementById('statBooks').innerText = authorState.books;
@@ -1229,6 +1338,7 @@
                 authorState.followers = Math.max(0, authorState.followers - 1);
                 if (btnElem) btnElem.innerHTML = '<i class="fa-solid fa-user-plus"></i> Подписаться';
             }
+            saveToLocalStorage();
             updateAuthorUI();
         }
 
@@ -1238,11 +1348,13 @@
             let current = parseInt(countSpan.innerText) || 0;
             countSpan.innerText = current + 1;
             authorState.likes += 1;
+            saveToLocalStorage();
             updateAuthorUI();
         }
 
         function publishBook() {
             authorState.books += 1;
+            saveToLocalStorage();
             updateAuthorUI();
             const container = document.getElementById('myPublishedBooksList');
             const emptyMsg = document.getElementById('emptyBooksMsg');
@@ -1250,18 +1362,13 @@
 
             const card = document.createElement('div');
             card.className = 'book-card';
-            card.innerHTML = '<div class="book-cover">Новая книга</div><div class="book-info"><div class="book-genre">Роман</div><div class="book-title">Моя книга</div><div class="book-author">Полина Сергеева</div></div>';
+            card.innerHTML = '<div class="book-cover">Новая книга</div><div class="book-info"><div class="book-genre">Роман</div><div class="book-title">Моя книга</div><div class="book-author">' + authorState.name + '</div></div>';
             container.appendChild(card);
             alert('🎉 Книга опубликована!');
         }
 
         function openEditProfileModal() { document.getElementById('editProfileModal').classList.add('active'); }
         function closeEditProfileModal() { document.getElementById('editProfileModal').classList.remove('active'); }
-
-        function saveAuthorProfile() {
-            document.getElementById('authorDisplayName').innerText = document.getElementById('editDisplayNameInput').value;
-            closeEditProfileModal();
-        }
 
         function toggleAiPanel() {
             const wrapper = document.getElementById('editorWrapper');
@@ -1276,6 +1383,11 @@
         }
 
         function selectEditorChapter(index, elem) {
+            if (sampleChapters[activeChapterIndex]) {
+                const editorEl = document.getElementById('paperEditor');
+                if (editorEl) sampleChapters[activeChapterIndex].content = editorEl.innerHTML;
+            }
+
             activeChapterIndex = index;
             document.querySelectorAll('#chapterList .chapter-card').forEach((card, i) => {
                 if (i === index) card.classList.add('active');
@@ -1284,6 +1396,7 @@
             if (sampleChapters[index]) {
                 document.getElementById('paperEditor').innerHTML = sampleChapters[index].content;
             }
+            saveToLocalStorage();
             updateWordCount();
         }
 
@@ -1301,12 +1414,15 @@
             if (html.classList.contains('dark')) {
                 html.classList.remove('dark');
                 html.classList.add('light');
+                authorState.theme = 'light';
                 btnIcon.className = 'fa-solid fa-moon';
             } else {
                 html.classList.remove('light');
                 html.classList.add('dark');
+                authorState.theme = 'dark';
                 btnIcon.className = 'fa-solid fa-sun';
             }
+            saveToLocalStorage();
         }
 
         function openBookModal(title, author, genre, views, rating, desc) {
@@ -1353,6 +1469,7 @@
             document.execCommand(cmd, false, value);
             document.getElementById('paperEditor').focus();
             updateWordCount();
+            saveToLocalStorage();
         }
 
         function updateWordCount() {
@@ -1399,6 +1516,7 @@
                 const targetIdx = items.indexOf(target);
                 if (draggedIdx < targetIdx) { list.insertBefore(draggedChapter, target.nextSibling); }
                 else { list.insertBefore(draggedChapter, target); }
+                saveToLocalStorage();
             }
         }
 
@@ -1411,7 +1529,10 @@
             link.click();
         }
 
-        updateAuthorUI();
+        // Initialize and Restore on Load
+        window.onload = function() {
+            loadFromLocalStorage();
+        };
     </script>
 </body>
 </html>
