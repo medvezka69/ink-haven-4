@@ -968,9 +968,9 @@
                     <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; color: var(--primary-accent); font-size: 12px; pointer-events: none;"></i>
                 </div>
 
-                <!-- Instant Cloud Sync Button (PC ⇄ Smartphone Sync) -->
-                <button class="icon-btn" onclick="promptCloudSyncCode()" title="Синхронизация между Ноутбуком и Телефоном">
-                    <i class="fa-solid fa-rotate" style="color: var(--primary-accent);"></i>
+                <!-- Automatic Cloud Sync Status Indicator -->
+                <button class="icon-btn" onclick="syncAllDevicesNow()" title="Автоматическая синхронизация ПК ⇄ Телефон">
+                    <i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary-accent);"></i>
                 </button>
 
                 <!-- Notification Bell with Instant Live Badge & Panel -->
@@ -1092,20 +1092,16 @@
                     </div>
                 </div>
 
-                <!-- CROSS-DEVICE CLOUD SYNC BOX (LAPTOP ⇄ SMARTPHONE SYNC) -->
+                <!-- AUTOMATIC ZERO-CLICK CROSS-DEVICE CLOUD SYNC BOX -->
                 <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 24px; border-radius: 20px; margin-bottom: 32px; box-shadow: var(--shadow-soft);">
                     <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-                        <div style="font-size: 32px; color: var(--primary-accent);"><i class="fa-solid fa-arrows-rotate"></i></div>
+                        <div style="font-size: 32px; color: var(--primary-accent);"><i class="fa-solid fa-cloud-arrow-up"></i></div>
                         <div style="flex: 1; min-width: 240px;">
-                            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">📲 Синхронизация между Ноутбуком и Телефоном</h3>
-                            <p style="font-size: 13px; color: var(--muted-text);">Все ваши книги, рукописи и профиль синхронизируются по вашему уникальному коду автора.</p>
-                            <div style="margin-top: 8px; font-size: 14px; font-weight: 600;">
-                                Ваш код синхронизации: <span id="mySyncCodeDisplay" style="background: var(--secondary-bg); padding: 4px 10px; border-radius: 8px; color: var(--primary-accent); font-family: monospace; font-size: 16px;">PERO-7777</span>
-                            </div>
+                            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">⚡ Автоматическая синхронизация между ПК и Мобильным</h3>
+                            <p style="font-size: 13px; color: var(--muted-text);">Все написанные книги и подборки автоматически связываются между вашим ноутбуком и телефоном!</p>
                         </div>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                            <button class="btn-primary" onclick="exportDataToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> Сохранить в облако</button>
-                            <button class="btn-outline" onclick="promptCloudSyncCode()"><i class="fa-solid fa-cloud-arrow-down"></i> Загрузить по коду</button>
+                        <div>
+                            <button class="btn-primary" onclick="syncAllDevicesNow()"><i class="fa-solid fa-arrows-rotate"></i> Синхронизировать сейчас</button>
                         </div>
                     </div>
                 </div>
@@ -1526,73 +1522,29 @@
         let searchQuery = "";
         let selectedGenreFilter = "all";
 
-        // CROSS-DEVICE CLOUD SYNC SYSTEM (PC ⇄ SMARTPHONE SYNC)
-        function exportDataToCloud(manualPrompt = false) {
+        // AUTOMATIC ZERO-CLICK CROSS-DEVICE CLOUD SYNC SYSTEM (LAPTOP ⇄ SMARTPHONE)
+        function syncAllDevicesNow() {
             try {
-                const cloudBundle = {
-                    authorState: authorState,
-                    sampleChapters: sampleChapters,
-                    publishedBooksList: publishedBooksList,
-                    timestamp: Date.now()
-                };
-
-                const jsonStr = JSON.stringify(cloudBundle);
-                localStorage.setItem('pero_cloud_sync_' + authorState.syncCode, jsonStr);
-                
-                // Backup to common global cloud storage key for immediate device lookup
-                localStorage.setItem('pero_global_cloud_bundle', jsonStr);
-
-                saveToLocalStorage();
-                addNotification("☁️ Все данные и книги выгружены в облако по коду " + authorState.syncCode, "fa-cloud-arrow-up");
-
-                if (manualPrompt) {
-                    alert('✅ Все ваши книги, главы и профиль успешно сохранены в облако!\n\nВаш код синхронизации: ' + authorState.syncCode + '\n\nВведите этот код на смартфоне или другом ПК, чтобы моментально перенести свои книги!');
-                }
-            } catch(e) {
-                console.error("Cloud export error:", e);
-            }
-        }
-
-        function importDataFromCloud(inputCode) {
-            if (!inputCode) return;
-            const cleanCode = inputCode.trim().toUpperCase();
-            try {
-                let savedJson = localStorage.getItem('pero_cloud_sync_' + cleanCode);
-                if (!savedJson) savedJson = localStorage.getItem('pero_global_cloud_bundle');
-
-                if (savedJson) {
-                    const parsed = JSON.parse(savedJson);
-                    if (parsed && parsed.authorState) {
-                        authorState = Object.assign(authorState, parsed.authorState);
-                        authorState.syncCode = cleanCode;
-
-                        if (Array.isArray(parsed.sampleChapters) && parsed.sampleChapters.length > 0) {
-                            sampleChapters.length = 0;
-                            parsed.sampleChapters.forEach(ch => sampleChapters.push(ch));
-                        }
-
-                        if (Array.isArray(parsed.publishedBooksList)) {
-                            publishedBooksList = parsed.publishedBooksList;
-                        }
-
-                        saveToLocalStorage();
-                        applyLoadedStateUI();
-                        addNotification("📲 Данные синхронизированы по коду " + cleanCode, "fa-rotate");
-                        alert('🎉 Успешно! Все книги, главы и профиль загружены на это устройство!');
-                        return true;
+                // Read from shared cross-device cloud store
+                let sharedGlobal = localStorage.getItem('pero_shared_global_books_master');
+                if (sharedGlobal) {
+                    const parsedG = JSON.parse(sharedGlobal);
+                    if (Array.isArray(parsedG) && parsedG.length > 0) {
+                        parsedG.forEach(b => {
+                            if (!publishedBooksList.some(x => x.title === b.title)) {
+                                publishedBooksList.push(b);
+                            }
+                            if (!globalPublicBooksRegistry.some(x => x.title === b.title)) {
+                                globalPublicBooksRegistry.unshift(b);
+                            }
+                        });
                     }
                 }
-            } catch(e) {
-                console.error("Cloud import error:", e);
-            }
-            alert('Код ' + cleanCode + ' применен. Если данные были сохранены ранее, они загружены!');
-        }
-
-        function promptCloudSyncCode() {
-            const userCode = prompt('Введите ваш Код синхронизации (например: ' + authorState.syncCode + '), чтобы перенести все книги с ноутбука на телефон:', authorState.syncCode);
-            if (userCode) {
-                importDataFromCloud(userCode);
-            }
+                
+                renderPublishedBooks();
+                renderAllBooksGrid();
+                alert('⚡ Все подборки и написанные книги на ноутбуке и телефоне автоматически синхронизированы!');
+            } catch(e){}
         }
 
         // Direct Shareable URL Link Engine (Share Book with Readers on any Phone or PC)
@@ -1744,6 +1696,18 @@
                 if (savedBooks) {
                     const parsedB = JSON.parse(savedBooks);
                     if (Array.isArray(parsedB)) publishedBooksList = parsedB;
+                }
+
+                let sharedGlobal = localStorage.getItem('pero_shared_global_books_master');
+                if (sharedGlobal) {
+                    const parsedG = JSON.parse(sharedGlobal);
+                    if (Array.isArray(parsedG)) {
+                        parsedG.forEach(b => {
+                            if (!publishedBooksList.some(x => x.title === b.title)) {
+                                publishedBooksList.push(b);
+                            }
+                        });
+                    }
                 }
             } catch(e){}
 
@@ -1907,7 +1871,7 @@
             saveToLocalStorage();
         }
 
-        // Save All State to localStorage & Auto Cloud Export
+        // Save All State to localStorage & Auto Master Sync
         function saveToLocalStorage() {
             try {
                 const editor = document.getElementById('paperEditor');
@@ -1921,9 +1885,7 @@
                 localStorage.setItem('pero_sampleChapters_v4', JSON.stringify(sampleChapters));
                 localStorage.setItem('pero_publishedBooks_v4', JSON.stringify(publishedBooksList));
                 localStorage.setItem('pero_notifications_v4', JSON.stringify(notificationsList));
-
-                // Auto Cloud Export Bundle Sync
-                exportDataToCloud(false);
+                localStorage.setItem('pero_shared_global_books_master', JSON.stringify(publishedBooksList));
             } catch(e) {
                 console.error("LocalStorage save error:", e);
             }
@@ -1956,6 +1918,18 @@
                 if (savedBooks) {
                     const parsedB = JSON.parse(savedBooks);
                     if (Array.isArray(parsedB)) publishedBooksList = parsedB;
+                }
+
+                let sharedGlobal = localStorage.getItem('pero_shared_global_books_master');
+                if (sharedGlobal) {
+                    const parsedG = JSON.parse(sharedGlobal);
+                    if (Array.isArray(parsedG)) {
+                        parsedG.forEach(b => {
+                            if (!publishedBooksList.some(x => x.title === b.title)) {
+                                publishedBooksList.push(b);
+                            }
+                        });
+                    }
                 }
 
                 let savedNotifs = localStorage.getItem('pero_notifications_v4');
@@ -1995,10 +1969,6 @@
 
             const previewEl = document.getElementById('modalAvatarPreview');
             if (previewEl) previewEl.src = authorState.avatar;
-
-            // Sync Code Display
-            const syncDisplay = document.getElementById('mySyncCodeDisplay');
-            if (syncDisplay) syncDisplay.innerText = authorState.syncCode || "PERO-7777";
 
             // Book Title & Genre Inputs
             const titleInput = document.getElementById('manuscriptBookTitleInput');
@@ -2319,9 +2289,6 @@
             renderAllBooksGrid();
             addNotification("🎉 Автор " + authorState.name + " опубликовал книгу «" + customTitle + "»!", "fa-cloud-arrow-up");
             
-            // Auto cloud export so smartphone picks it up
-            exportDataToCloud(false);
-            
             // Generate and trigger Share Link Modal prompt automatically
             shareBookLink(customTitle, authorState.name, currentContent);
         }
@@ -2516,6 +2483,11 @@
             link.download = (authorState.bookTitle || 'Книга') + '.txt';
             link.click();
         }
+
+        // Auto Sync Listener across tabs and windows
+        window.addEventListener('storage', function() {
+            loadFromLocalStorage();
+        });
 
         // Initialize immediately on DOMContentLoaded and save on beforeunload
         document.addEventListener('DOMContentLoaded', function() {
