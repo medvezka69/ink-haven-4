@@ -18,6 +18,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as AuthenticatedWriteIndexRouteImport } from './routes/_authenticated/write.index'
 import { Route as BookBookIdIndexRouteImport } from './routes/book.$bookId.index'
 import { Route as BookBookIdReadRouteImport } from './routes/book.$bookId.read'
 
@@ -66,6 +67,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedWriteIndexRoute = AuthenticatedWriteIndexRouteImport.update({
+  id: '/write/',
+  path: '/write/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const BookBookIdIndexRoute = BookBookIdIndexRouteImport.update({
   id: '/book/$bookId/',
   path: '/book/$bookId/',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/u/$username': typeof UUsernameRoute
   '/book/$bookId/read': typeof BookBookIdReadRoute
+  '/write/': typeof AuthenticatedWriteIndexRoute
   '/book/$bookId/': typeof BookBookIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/u/$username': typeof UUsernameRoute
   '/book/$bookId/read': typeof BookBookIdReadRoute
+  '/write': typeof AuthenticatedWriteIndexRoute
   '/book/$bookId': typeof BookBookIdIndexRoute
 }
 export interface FileRoutesById {
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/u/$username': typeof UUsernameRoute
   '/book/$bookId/read': typeof BookBookIdReadRoute
+  '/_authenticated/write/': typeof AuthenticatedWriteIndexRoute
   '/book/$bookId/': typeof BookBookIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/u/$username'
     | '/book/$bookId/read'
+    | '/write/'
     | '/book/$bookId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/u/$username'
     | '/book/$bookId/read'
+    | '/write'
     | '/book/$bookId'
   id:
     | '__root__'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/u/$username'
     | '/book/$bookId/read'
+    | '/_authenticated/write/'
     | '/book/$bookId/'
   fileRoutesById: FileRoutesById
 }
@@ -232,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/write/': {
+      id: '/_authenticated/write/'
+      path: '/write'
+      fullPath: '/write/'
+      preLoaderRoute: typeof AuthenticatedWriteIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/book/$bookId/': {
       id: '/book/$bookId/'
       path: '/book/$bookId'
@@ -252,11 +271,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedWriteIndexRoute: typeof AuthenticatedWriteIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedWriteIndexRoute: AuthenticatedWriteIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
