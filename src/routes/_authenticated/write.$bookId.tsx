@@ -165,6 +165,73 @@ function Editor() {
     else exportHtmlDoc(name, list, "doc");
   };
 
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  const [draggedChapterIndex, setDraggedChapterIndex] = useState<number | null>(null);
+
+  const handleFileDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (!files.length) return;
+
+    for (const file of files) {
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const imgUrl = event.target?.result as string;
+          if (editorRef.current && imgUrl) {
+            editorRef.current.focus();
+            document.execCommand(
+              "insertHTML",
+              false,
+              `<img src="${imgUrl}" alt="${file.name}" class="my-4 max-w-full rounded-md shadow-sm" />`,
+            );
+            setDirty(true);
+            setWords(countWords(editorRef.current.innerHTML));
+            toast.success(`Изображение «${file.name}» вставлено`);
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const text = event.target?.result as string;
+          if (editorRef.current && text) {
+            const formatted = text
+              .split(/\r?\n\r?\n/)
+              .map((p) => `<p>${p.trim().replace(/\r?\n/g, "<br/>")}</p>`)
+              .join("");
+            editorRef.current.focus();
+            document.execCommand("insertHTML", false, formatted);
+            setDirty(true);
+            setWords(countWords(editorRef.current.innerHTML));
+            toast.success(`Текст из «${file.name}» вставлен`);
+          }
+        };
+        reader.readAsText(file);
+      }
+    }
+  };
+
+  const handleChapterDrop = async (targetIndex: number) => {
+    if (draggedChapterIndex === null || draggedChapterIndex === targetIndex) return;
+    const list = [...(chapters.data ?? [])];
+    const [moved] = list.splice(draggedChapterIndex, 1);
+    list.splice(targetIndex, 0, moved);
+
+    setDraggedChapterIndex(null);
+
+    // Update positions in DB
+    const updates = list.map((c, i) =>
+      supabase.from("chapters").update({ position: i + 1 }).eq("id", c.id),
+    );
+    await Promise.all(updates);
+    qc.invalidateQueries({ queryKey: ["edit-chapters", bookId] });
+    toast.success("Порядок глав обновлён");
+  };
+
   if (book.data && user && book.data.author_id !== user.id) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -174,7 +241,30 @@ function Editor() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div
+      className="relative flex h-screen flex-col bg-background"
+      onDragOver={(e) => {
+        e.preventDefault();
+        if (e.dataTransfer.types.includes("Files")) setIsDraggingFile(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+        setIsDraggingFile(false);
+      }}
+      onDrop={handleFileDrop}
+    >
+      {isDraggingFile && (
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-4 border-dashed border-accent bg-background/90 backdrop-blur-sm">
+          <div className="text-center">
+            <Download className="mx-auto size-12 text-accent animate-bounce" />
+            <p className="font-display mt-3 text-xl font-bold">Перетащите файл сюда</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Текстовый файл (TXT, MD, DOCX) или изображение вставится прямо в главу
+            </p>
+          </div>
+        </div>
+      )}
+
       <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2">
         <Link to="/write" className="font-display font-semibold hover:text-accent">
           ← {book.data?.title}
@@ -211,17 +301,33 @@ function Editor() {
               <Plus className="size-4" />
             </Button>
           </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">Перетащите мышью для сортировки</p>
           <div className="mt-2 space-y-1">
-            {(chapters.data ?? []).map((c) => (
-              <button
+            {(chapters.data ?? []).map((c, index) => (
+              <div
                 key={c.id}
-                onClick={() => setCurrentId(c.id)}
-                className={`block w-full truncate rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted ${
-                  c.id === currentId ? "bg-muted text-accent" : ""
-                }`}
+                draggable
+                onDragStart={(e) => {
+                  e.stopPropagation();
+                  setDraggedChapterIndex(index);
+                }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.stopPropagation();
+                  handleChapterDrop(index);
+                }}
+                className="group relative flex items-center"
               >
-                {c.title} {c.is_published ? "" : "·"}
-              </button>
+                <button
+                  onClick={() => setCurrentId(c.id)}
+                  className={`block w-full truncate rounded-md px-2 py-1.5 text-left text-sm cursor-grab active:cursor-grabbing hover:bg-muted ${
+                    c.id === currentId ? "bg-muted text-accent font-medium" : ""
+                  } ${draggedChapterIndex === index ? "opacity-40" : ""}`}
+                >
+                  <span className="mr-1.5 opacity-40 group-hover:opacity-100">⋮⋮</span>
+                  {c.title} {c.is_published ? "" : "·"}
+                </button>
+              </div>
             ))}
           </div>
         </aside>

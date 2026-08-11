@@ -66,7 +66,7 @@ function Community() {
   return (
     <AppShell>
       <div className="container-page py-8">
-        <h1 className="font-display text-3xl font-bold">👥 Сообщество</h1>
+        <h1 className="font-display text-3xl font-bold">Сообщество</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Люди, которые пишут и читают здесь прямо сейчас.
         </p>

@@ -93,7 +93,7 @@ function WriteHome() {
       <div className="container-page py-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl font-bold">✍️ Кабинет автора</h1>
+            <h1 className="font-display text-3xl font-bold">Кабинет автора</h1>
             <p className="text-sm text-muted-foreground">
               Здесь живут твои черновики и опубликованные истории.
             </p>

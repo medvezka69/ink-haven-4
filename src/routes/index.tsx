@@ -35,7 +35,7 @@ function Section({
   action,
 }: {
   title: string;
-  emoji: string;
+  emoji?: string;
   children: React.ReactNode;
   action?: React.ReactNode;
 }) {
@@ -43,7 +43,7 @@ function Section({
     <section className="container-page py-8">
       <div className="mb-4 flex items-end justify-between gap-4">
         <h2 className="font-display text-xl font-semibold sm:text-2xl">
-          <span className="mr-2">{emoji}</span>
+          {emoji && <span className="mr-2">{emoji}</span>}
           {title}
         </h2>
         {action}
@@ -130,7 +130,6 @@ function Index() {
 
       <Section
         title="Сейчас популярно"
-        emoji="🔥"
         action={
           <Link to="/read" className="text-sm text-accent hover:underline">
             Весь каталог
@@ -162,7 +161,7 @@ function Index() {
         )}
       </Section>
 
-      <Section title="Новые книги" emoji="✨">
+      <Section title="Новые книги">
         <Grid>
           {(fresh.data ?? []).map((b, i) => (
             <BookCard key={b.id} book={b} index={i} />
@@ -171,7 +170,7 @@ function Index() {
       </Section>
 
       {user && (continueReading.data?.length ?? 0) > 0 && (
-        <Section title="Продолжить чтение" emoji="📖">
+        <Section title="Продолжить чтение">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {(continueReading.data ?? []).map((item) => {
               const book = item.books as unknown as {
@@ -209,7 +208,7 @@ function Index() {
       )}
 
       {user && (followed.data?.length ?? 0) > 0 && (
-        <Section title="Авторы, на которых я подписан" emoji="❤️">
+        <Section title="Авторы, на которых я подписан">
           <Grid>
             {(followed.data ?? []).map((b, i) => (
               <BookCard key={b.id} book={b} index={i} />
@@ -218,7 +217,7 @@ function Index() {
         </Section>
       )}
 
-      <Section title="Жанры" emoji="🎭">
+      <Section title="Жанры">
         <div className="flex flex-wrap gap-2">
           {GENRES.map((g) => (
             <Link

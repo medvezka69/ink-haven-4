@@ -66,7 +66,7 @@ function LibraryPage() {
   return (
     <AppShell>
       <div className="container-page py-8">
-        <h1 className="font-display text-3xl font-bold">📚 Моя библиотека</h1>
+        <h1 className="font-display text-3xl font-bold">Моя библиотека</h1>
 
         <Tabs defaultValue="reading" className="mt-6">
           <TabsList className="flex-wrap">

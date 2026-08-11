@@ -100,7 +100,7 @@ export function EmptyState({
 }) {
   return (
     <div className="surface-card flex flex-col items-center gap-3 px-6 py-14 text-center">
-      <span className="text-3xl">📖</span>
+      <BookOpen className="size-10 text-muted-foreground stroke-[1.5]" />
       <h3 className="font-display text-lg font-semibold">{title}</h3>
       <p className="max-w-sm text-sm text-muted-foreground">{text}</p>
       {action}

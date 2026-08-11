@@ -54,7 +54,7 @@ function NotificationsPage() {
     <AppShell>
       <div className="container-page max-w-3xl py-8">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-3xl font-bold">🔔 Уведомления</h1>
+          <h1 className="font-display text-3xl font-bold">Уведомления</h1>
           <Button variant="outline" size="sm" onClick={markAll}>
             <Check className="mr-1 size-4" /> Прочитать все
           </Button>

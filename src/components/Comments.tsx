@@ -144,7 +144,9 @@ export function Comments({
   const renderComment = (c: CommentRow, nested = false) => (
     <div key={c.id} className={`surface-card p-4 ${nested ? "ml-6 mt-2" : ""}`}>
       {c.is_pinned && (
-        <p className="mb-2 text-xs text-accent">📌 Автор закрепил этот комментарий</p>
+        <p className="mb-2 flex items-center gap-1 text-xs text-accent font-medium">
+          <Pin className="size-3.5" /> Автор закрепил этот комментарий
+        </p>
       )}
       <div className="flex items-center gap-2">
         <span className="flex size-7 items-center justify-center rounded-full bg-secondary text-xs font-semibold">

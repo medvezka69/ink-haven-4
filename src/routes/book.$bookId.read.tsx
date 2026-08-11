@@ -36,7 +36,7 @@ export const Route = createFileRoute("/book/$bookId/read")({
 const THEMES = {
   light: "bg-paper text-paper-foreground",
   sepia: "bg-sepia text-sepia-foreground",
-  dark: "bg-[oklch(0.17_0.01_60)] text-[oklch(0.9_0.01_85)]",
+  dark: "bg-[oklch(0.14_0.01_270)] text-[oklch(0.98_0_0)] [&_h2]:text-[oklch(0.75_0.18_340)]",
 } as const;
 
 function Reader() {
