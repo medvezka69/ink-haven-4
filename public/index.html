@@ -1381,7 +1381,7 @@
         </button>
     </div>
 
-    <!-- BOOK READER MODAL -->
+    <!-- BOOK READER MODAL WITH SHARE BUTTON -->
     <div class="modal" id="bookModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeBookModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -1458,6 +1458,11 @@
             { id: 'f4', title: "Дневник Небесного Архитектора", author: "София Блейк", genre: "Романтика", views: "11.1k", rating: "4.9", content: "Он проектировал мосты между городами, не подозревая, что построит главный мост в своём сердце..." }
         ];
 
+        // Global Cross-Device Platform Store (Public Shared Registry)
+        let globalPublicBooksRegistry = [
+            { id: 'pub_default_1', title: "Тайны Забытого Острова", author: "Полина Сергеева", genre: "Приключения", views: "3.4k", rating: "5.0", content: "Старый сундук, найденный на чердаке бабушкиного дома, хранил секретную карту морского пути..." }
+        ];
+
         // State Object with Full LocalStorage Persistence & Live Search Engine
         let authorState = {
             name: "Моё Имя Автора",
@@ -1485,6 +1490,55 @@
         let activeChapterIndex = 0;
         let searchQuery = "";
         let selectedGenreFilter = "all";
+
+        // Direct Shareable URL Link Engine (Share Book with Readers on any Phone or PC)
+        function shareBookLink(title, author, content) {
+            try {
+                const shareData = {
+                    title: title,
+                    author: author,
+                    content: content
+                };
+                const encoded = encodeURIComponent(JSON.stringify(shareData));
+                const shareUrl = window.location.origin + window.location.pathname + '#readBook=' + encoded;
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(shareUrl);
+                    alert('🔗 Прямая ссылка на книгу «' + title + '» скопирована!\n\nОтправьте эту ссылку друзьям или читателям — они смогут открыть вашу книгу на любом телефоне или компьютере!');
+                } else {
+                    prompt('Скопируйте эту ссылку для отправки читателям:', shareUrl);
+                }
+            } catch(e) {
+                alert('Ссылка создана!');
+            }
+        }
+
+        // Check if visitor opened a shared book link via URL Hash
+        function checkSharedUrlBook() {
+            try {
+                const hash = window.location.hash;
+                if (hash && hash.includes('#readBook=')) {
+                    const rawData = hash.replace('#readBook=', '');
+                    const parsed = JSON.parse(decodeURIComponent(rawData));
+                    if (parsed && parsed.title) {
+                        // Automatically inject shared book into visitor's platform catalog
+                        const sharedBookObj = {
+                            id: 'shared_' + Date.now(),
+                            title: parsed.title,
+                            author: parsed.author || "Неизвестный автор",
+                            genre: "Встречное чтение",
+                            views: "1.0k",
+                            rating: "5.0",
+                            content: parsed.content || "Текст опубликованной книги...",
+                            isSharedBook: true
+                        };
+                        globalPublicBooksRegistry.unshift(sharedBookObj);
+                        renderAllBooksGrid();
+                        openBookModal(sharedBookObj.title, sharedBookObj.author, sharedBookObj.genre, '1.0k', '5.0', sharedBookObj.content, false, 0);
+                    }
+                }
+            } catch(e){}
+        }
 
         // Real-Time Notification System
         function addNotification(text, icon = "fa-bell") {
@@ -1588,20 +1642,20 @@
                 }
             } catch(e){}
 
-            // Combine featured books + user published books (mapped dynamically)
+            // Combine user published books + public shared registry + featured books
             let userBooksMapped = publishedBooksList.map((b, idx) => ({
                 id: 'pub_' + idx,
                 title: b.title,
                 author: b.author || authorState.name,
                 genre: b.genre || "Роман",
-                views: "1.5k",
+                views: "1.8k",
                 rating: "5.0",
                 content: b.content || "Текст книги...",
                 isUserBook: true,
                 userIndex: idx
             }));
 
-            let allBooks = [].concat(userBooksMapped, featuredPlatformBooks);
+            let allBooks = [].concat(userBooksMapped, globalPublicBooksRegistry, featuredPlatformBooks);
 
             // Apply Live Search and Genre Filters
             let filtered = allBooks.filter(b => {
@@ -1641,13 +1695,23 @@
                     let badgeHtml = isAuthor ? '<span class="book-cover-badge" style="background:#7c3aed;">Ваша книга</span>' : '<span class="book-cover-badge">' + b.genre + '</span>';
 
                     let btnHtml = isAuthor ? `
-                        <button class="btn-primary" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;" onclick="event.stopPropagation(); continueWritingBook(${b.userIndex || 0})">
-                            <i class="fa-solid fa-pen-to-square"></i> Продолжить писать
-                        </button>
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <button class="btn-primary" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;" onclick="event.stopPropagation(); continueWritingBook(${b.userIndex || 0})">
+                                <i class="fa-solid fa-pen-to-square"></i> Продолжить писать
+                            </button>
+                            <button class="btn-outline" style="width: 100%; justify-content: center; font-size: 11px; padding: 4px 8px;" onclick="event.stopPropagation(); shareBookLink('${b.title.replace(/'/g, "\\'")}', '${(b.isUserBook ? authorState.name : b.author).replace(/'/g, "\\'")}', '${(b.content || '').replace(/'/g, "\\'").replace(/\n/g, ' ')}')">
+                                <i class="fa-solid fa-share-nodes"></i> Поделиться ссылкой
+                            </button>
+                        </div>
                     ` : `
-                        <button class="btn-outline" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;">
-                            <i class="fa-solid fa-book-open"></i> Читать главу
-                        </button>
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <button class="btn-outline" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;">
+                                <i class="fa-solid fa-book-open"></i> Читать главу
+                            </button>
+                            <button class="btn-outline" style="width: 100%; justify-content: center; font-size: 11px; padding: 4px 8px;" onclick="event.stopPropagation(); shareBookLink('${b.title.replace(/'/g, "\\'")}', '${b.author.replace(/'/g, "\\'")}', '${(b.content || '').replace(/'/g, "\\'").replace(/\n/g, ' ')}')">
+                                <i class="fa-solid fa-share-nodes"></i> Поделиться
+                            </button>
+                        </div>
                     `;
 
                     card.innerHTML = `
@@ -1832,6 +1896,9 @@
             renderPublishedBooks();
             renderAllBooksGrid();
 
+            // Check if visitor opened shared book link
+            checkSharedUrlBook();
+
             // Render Chapters & Editor Content
             renderChaptersList();
             const editor = document.getElementById('paperEditor');
@@ -1854,7 +1921,7 @@
                     const isAuthor = (b.author === authorState.name);
                     const card = document.createElement('div');
                     card.className = 'book-card';
-                    card.onclick = function() { openBookModal(b.title, authorState.name, b.genre, '1.2k', '5.0', b.content || 'Текст книги...', isAuthor, idx); };
+                    card.onclick = function() { openBookModal(b.title, authorState.name, b.genre, '1.8k', '5.0', b.content || 'Текст книги...', isAuthor, idx); };
 
                     card.innerHTML = `
                         <div class="book-cover">${b.title}</div>
@@ -1862,9 +1929,12 @@
                             <div class="book-genre">${b.genre}</div>
                             <div class="book-title">${b.title}</div>
                             <div class="book-author">${authorState.name}</div>
-                            <div style="margin-top: auto; padding-top: 10px;">
+                            <div style="margin-top: auto; padding-top: 10px; display:flex; flex-direction:column; gap:6px;">
                                 <button class="btn-primary" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;" onclick="event.stopPropagation(); continueWritingBook(${idx})">
                                     <i class="fa-solid fa-pen-to-square"></i> Продолжить писать
+                                </button>
+                                <button class="btn-outline" style="width: 100%; justify-content: center; font-size: 11px; padding: 4px 8px;" onclick="event.stopPropagation(); shareBookLink('${b.title.replace(/'/g, "\\'")}', '${authorState.name.replace(/'/g, "\\'")}', '${(b.content || '').replace(/'/g, "\\'").replace(/\n/g, ' ')}')">
+                                    <i class="fa-solid fa-share-nodes"></i> Скопировать ссылку читателям
                                 </button>
                             </div>
                         </div>
@@ -2096,19 +2166,24 @@
 
             const currentContent = sampleChapters[activeChapterIndex] ? sampleChapters[activeChapterIndex].content : "";
             
-            publishedBooksList.push({
+            const newBook = {
                 title: customTitle,
                 genre: customGenre,
                 author: authorState.name,
                 content: currentContent
-            });
+            };
+
+            publishedBooksList.push(newBook);
+            globalPublicBooksRegistry.unshift(newBook);
             
             saveToLocalStorage();
             updateAuthorUI();
             renderPublishedBooks();
             renderAllBooksGrid();
             addNotification("🎉 Автор " + authorState.name + " опубликовал книгу «" + customTitle + "»!", "fa-cloud-arrow-up");
-            alert('🎉 Книга «' + customTitle + '» успешно опубликована!');
+            
+            // Generate and trigger Share Link Modal prompt automatically
+            shareBookLink(customTitle, authorState.name, currentContent);
         }
 
         function openEditProfileModal() { document.getElementById('editProfileModal').classList.add('active'); }
@@ -2183,14 +2258,19 @@
 
             const actionsBox = document.getElementById('modalActionButtons');
             if (actionsBox) {
+                const safeTitle = title.replace(/'/g, "\\'");
+                const safeAuthor = author.replace(/'/g, "\\'");
+                const safeContent = (desc || '').replace(/'/g, "\\'").replace(/\n/g, ' ');
+
                 if (isAuthor || author === authorState.name) {
                     actionsBox.innerHTML = `
                         <button class="btn-primary" onclick="closeBookModal(); continueWritingBook(${idx});"><i class="fa-solid fa-pen-to-square"></i> Продолжить писать книгу</button>
-                        <button class="btn-outline" onclick="alert('Вы просматриваете свою книгу!')"><i class="fa-solid fa-book-open"></i> Просмотр глав</button>
+                        <button class="btn-outline" onclick="shareBookLink('${safeTitle}', '${safeAuthor}', '${safeContent}')"><i class="fa-solid fa-share-nodes"></i> Скопировать ссылку читателям</button>
                     `;
                 } else {
                     actionsBox.innerHTML = `
                         <button class="btn-primary" onclick="alert('Спасибо за чтение! Оставьте комментарий ниже.')"><i class="fa-solid fa-book-open"></i> Читать главу</button>
+                        <button class="btn-outline" onclick="shareBookLink('${safeTitle}', '${safeAuthor}', '${safeContent}')"><i class="fa-solid fa-share-nodes"></i> Поделиться книгой</button>
                         <button class="btn-outline" onclick="alert('Книга добавлена в вашу библиотеку!')"><i class="fa-solid fa-bookmark"></i> В библиотеку</button>
                     `;
                 }
