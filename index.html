@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Перо — Литературная платформа и редактор книг</title>
-    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word с кнопками Отменить и Повторить (Undo/Redo).">
+    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word с функциями удаления и сортировки глав.">
     <!-- Google Fonts Expansion (All 12 Fonts) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -328,13 +328,13 @@
             box-shadow: var(--shadow-soft);
             margin-top: 20px;
             display: grid;
-            grid-template-columns: 260px 1fr 340px;
+            grid-template-columns: 270px 1fr 340px;
             min-height: 750px;
             position: relative;
         }
 
         .word-editor-wrapper.no-ai {
-            grid-template-columns: 260px 1fr;
+            grid-template-columns: 270px 1fr;
         }
 
         /* Sidebar for chapters */
@@ -366,7 +366,7 @@
         .chapter-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            padding: 12px 14px;
+            padding: 10px 12px;
             border-radius: 10px;
             cursor: pointer;
             font-size: 14px;
@@ -388,7 +388,24 @@
 
         html.dark .chapter-card.active { background: rgba(236, 72, 153, 0.15); }
 
-        .drag-handle { color: var(--muted-text); margin-right: 8px; cursor: grab; }
+        .drag-handle { color: var(--muted-text); margin-right: 6px; cursor: grab; }
+
+        /* Delete Chapter Button */
+        .delete-chapter-btn {
+            border: none;
+            background: transparent;
+            color: var(--muted-text);
+            padding: 4px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s ease;
+        }
+
+        .delete-chapter-btn:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
 
         /* Expanded Word Ribbon Toolbar */
         .editor-workspace {
@@ -689,7 +706,7 @@
                     <i class="fa-solid fa-feather"></i> Бесплатно для авторов и читателей
                 </div>
                 <h1>Истории, которые хочется писать.<br><span style="color: var(--primary-accent);">Истории, которые хочется читать.</span></h1>
-                <p>Создавай свои книги в продвинутом Word-редакторе со стрелочками отмены и повтора (Undo/Redo)!</p>
+                <p>Создавай свои книги в продвинутом Word-редакторе со всеми нужными функциями!</p>
                 <div style="display: flex; gap: 12px;">
                     <button class="btn-primary" onclick="showTab('write', document.querySelectorAll('.nav-btn')[2])">Начать писать <i class="fa-solid fa-arrow-right"></i></button>
                     <button class="btn-outline" onclick="showTab('profile', document.querySelectorAll('.nav-btn')[3])">Мой профиль автора</button>
@@ -799,13 +816,13 @@
             </section>
         </div>
 
-        <!-- TAB 4: WRITE STUDIO (Ribbon Toolbar with Undo ↩️ / Redo ↪️ Arrow Buttons) -->
+        <!-- TAB 4: WRITE STUDIO (With Delete Chapter Functionality) -->
         <div id="tab-write" class="tab-page">
             <section class="section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <div>
                         <h1 style="font-size: 30px; font-weight: 700;">Кабинет автора — Редактор рукописи с AI</h1>
-                        <p style="color: var(--muted-text); font-size: 14px;">Используйте стрелочки отмены и повтора (Undo/Redo), если случайно удалили текст или хотите его вернуть!</p>
+                        <p style="color: var(--muted-text); font-size: 14px;">Создавайте, редактируйте и удаляйте главы книги при необходимости.</p>
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button class="btn-primary" onclick="toggleAiPanel()"><i class="fa-solid fa-wand-magic-sparkles"></i> AI-помощник</button>
@@ -815,27 +832,33 @@
                 </div>
 
                 <div class="word-editor-wrapper" id="editorWrapper">
+                    
+                    <!-- Chapter Sidebar with Interactive Delete Chapter Button -->
                     <div class="editor-sidebar">
                         <div class="sidebar-header">
                             <h3>Главы книги</h3>
                             <button class="btn-outline" style="padding: 4px 8px; font-size: 12px;" onclick="addChapter()"><i class="fa-solid fa-plus"></i> Глава</button>
                         </div>
+                        <p style="font-size: 11px; color: var(--muted-text); margin-bottom: 8px;">Нажмите на главу для выбора. Иконка 🗑️ — удаление главы.</p>
+
                         <ul class="chapter-list" id="chapterList">
                             <li class="chapter-card active" onclick="selectEditorChapter(0, this)" draggable="true" ondragstart="dragChapterStart(event)" ondragover="dragChapterOver(event)" ondrop="dropChapterSwap(event)">
-                                <span><i class="fa-solid fa-grip-vertical drag-handle"></i> Глава 1. Пролог</span>
+                                <span style="display:flex; align-items:center;"><i class="fa-solid fa-grip-vertical drag-handle"></i> Глава 1. Пролог</span>
+                                <button class="delete-chapter-btn" onclick="deleteChapter(event, 0)" title="Удалить главу"><i class="fa-solid fa-trash-can"></i></button>
                             </li>
                             <li class="chapter-card" onclick="selectEditorChapter(1, this)" draggable="true" ondragstart="dragChapterStart(event)" ondragover="dragChapterOver(event)" ondrop="dropChapterSwap(event)">
-                                <span><i class="fa-solid fa-grip-vertical drag-handle"></i> Глава 2. Встреча</span>
+                                <span style="display:flex; align-items:center;"><i class="fa-solid fa-grip-vertical drag-handle"></i> Глава 2. Встреча</span>
+                                <button class="delete-chapter-btn" onclick="deleteChapter(event, 1)" title="Удалить главу"><i class="fa-solid fa-trash-can"></i></button>
                             </li>
                         </ul>
                     </div>
 
                     <div class="editor-workspace">
 
-                        <!-- Word Ribbon Toolbar with UNDO ↩️ and REDO ↪️ Arrow Buttons -->
+                        <!-- Word Ribbon Toolbar -->
                         <div class="word-toolbar">
 
-                            <!-- ADDED: UNDO / REDO ARROW BUTTONS -->
+                            <!-- UNDO / REDO ARROW BUTTONS -->
                             <div class="toolbar-group">
                                 <button class="tool-btn" onclick="formatDoc('undo')" title="Вернуть назад / Отменить (Ctrl+Z)">
                                     <i class="fa-solid fa-rotate-left" style="font-size: 15px;"></i>
@@ -1075,19 +1098,82 @@
             }
         }
 
+        const sampleChapters = [
+            { title: "Глава 1. Пролог", content: "<h1>Глава 1. Пролог</h1><p>Солнце медленно опускалось за вершины старого леса, отбрасывая длинные багровые тени на каменные плиты двора.</p>" },
+            { title: "Глава 2. Встреча", content: "<h1>Глава 2. Встреча</h1><p>Дверь старой библиотеки отворилась. На пороге стоял незнакомец в тёмном плаще.</p>" }
+        ];
+
+        let activeChapterIndex = 0;
+
+        function renderChaptersList() {
+            const list = document.getElementById('chapterList');
+            list.innerHTML = '';
+
+            sampleChapters.forEach((ch, idx) => {
+                const li = document.createElement('li');
+                li.className = 'chapter-card' + (idx === activeChapterIndex ? ' active' : '');
+                li.onclick = function() { selectEditorChapter(idx, li); };
+                li.draggable = true;
+                li.ondragstart = dragChapterStart;
+                li.ondragover = dragChapterOver;
+                li.ondrop = dropChapterSwap;
+
+                li.innerHTML = '<span style="display:flex; align-items:center;"><i class="fa-solid fa-grip-vertical drag-handle"></i> ' + ch.title + '</span><button class="delete-chapter-btn" onclick="deleteChapter(event, ' + idx + ')" title="Удалить главу"><i class="fa-solid fa-trash-can"></i></button>';
+                list.appendChild(li);
+            });
+        }
+
+        function deleteChapter(event, index) {
+            event.stopPropagation();
+            if (sampleChapters.length <= 1) {
+                alert('В книге должна оставаться хотя бы одна глава!');
+                return;
+            }
+
+            const chTitle = sampleChapters[index]?.title || 'эту главу';
+            if (confirm('Вы уверены, что хотите удалить «' + chTitle + '»?')) {
+                sampleChapters.splice(index, 1);
+                
+                // Re-number titles if standard
+                sampleChapters.forEach((c, i) => {
+                    if (c.title.startsWith('Глава ')) {
+                        c.title = c.title.replace(/Глава \d+/, 'Глава ' + (i + 1));
+                    }
+                });
+
+                if (activeChapterIndex >= sampleChapters.length) {
+                    activeChapterIndex = sampleChapters.length - 1;
+                }
+
+                renderChaptersList();
+                selectEditorChapter(activeChapterIndex, document.querySelectorAll('#chapterList .chapter-card')[activeChapterIndex]);
+            }
+        }
+
+        function addChapter() {
+            const newNum = sampleChapters.length + 1;
+            const newTitle = 'Глава ' + newNum + '. Новая глава';
+            
+            sampleChapters.push({
+                title: newTitle,
+                content: '<h1>' + newTitle + '</h1><p>Начните писать здесь...</p>'
+            });
+
+            activeChapterIndex = sampleChapters.length - 1;
+            renderChaptersList();
+            selectEditorChapter(activeChapterIndex, document.querySelectorAll('#chapterList .chapter-card')[activeChapterIndex]);
+        }
+
         const aiPlotVariations = {
             continue: [
-                "Из глубины подземного коридора послышался едва различимый шаг. Из тумана возник высокий силуэт в тёмном плаще, держащий в руках бронзовый ключ. <i>«Я искал тебя слишком долго,»</i> — произнёс он, остановившись в паре шагов.",
-                "Внезапный порыв ветра угасил свечи, и комнату заполнил таинственный голубоватый свет.",
-                "Герой почувствовал, как сердце забилось чаще. В руке он сжимал старинный амулет..."
+                "Из глубины подземного коридора послышался едва различимый шаг. Из тумана возник высокий силуэт в тёмном плаще, держащий в руках бронзовый ключ.",
+                "Внезапный порыв ветра угасил свечи, и комнату заполнил таинственный голубоватый свет."
             ],
             twist: [
-                "⚡ <b>Неожиданный поворот:</b> Человек, которого герой считал верным союзником, оказывается тайным хранителем ордена!",
-                "⚡ <b>Поворот сюжета:</b> Из тени появляется тот, кого считали погибшим в первых главах."
+                "⚡ <b>Неожиданный поворот:</b> Человек, которого герой считал верным союзником, оказывается тайным хранителем древнего ордена!"
             ],
             dialogue: [
-                "💬 <b>Диалог персонажей:</b><br>— Ты действительно веришь, что это единственный выход? — тихо спросила она.<br>— У нас не осталось выбора.",
-                "💬 <b>Диалог персонажей:</b><br>— Зачем ты вернулся?<br>— Появилось кое-что, о чём тебе не рассказали."
+                "💬 <b>Диалог персонажей:</b><br>— Ты действительно веришь, что это единственный выход? — тихо спросила она.<br>— У нас не осталось выбора."
             ],
             check: [
                 "🔍 <b>Стилистический анализ AI:</b><br>• Орфографических ошибок не обнаружено."
@@ -1189,14 +1275,12 @@
             }
         }
 
-        const sampleChapters = [
-            { title: "Глава 1. Пролог", content: "<h1>Глава 1. Пролог</h1><p>Солнце медленно опускалось за вершины старого леса...</p>" },
-            { title: "Глава 2. Встреча", content: "<h1>Глава 2. Встреча</h1><p>Дверь старой библиотеки отворилась...</p>" }
-        ];
-
         function selectEditorChapter(index, elem) {
-            document.querySelectorAll('#chapterList .chapter-card').forEach(card => card.classList.remove('active'));
-            elem.classList.add('active');
+            activeChapterIndex = index;
+            document.querySelectorAll('#chapterList .chapter-card').forEach((card, i) => {
+                if (i === index) card.classList.add('active');
+                else card.classList.remove('active');
+            });
             if (sampleChapters[index]) {
                 document.getElementById('paperEditor').innerHTML = sampleChapters[index].content;
             }
@@ -1316,23 +1400,6 @@
                 if (draggedIdx < targetIdx) { list.insertBefore(draggedChapter, target.nextSibling); }
                 else { list.insertBefore(draggedChapter, target); }
             }
-        }
-
-        function addChapter() {
-            const list = document.getElementById('chapterList');
-            const newNum = list.children.length + 1;
-            const newTitle = 'Глава ' + newNum + '. Новая глава';
-            sampleChapters.push({ title: newTitle, content: '<h1>' + newTitle + '</h1><p>Начните писать здесь...</p>' });
-            const li = document.createElement('li');
-            li.className = 'chapter-card';
-            li.onclick = function() { selectEditorChapter(newNum - 1, li); };
-            li.draggable = true;
-            li.ondragstart = dragChapterStart;
-            li.ondragover = dragChapterOver;
-            li.ondrop = dropChapterSwap;
-            li.innerHTML = '<span><i class="fa-solid fa-grip-vertical drag-handle"></i> ' + newTitle + '</span>';
-            list.appendChild(li);
-            selectEditorChapter(newNum - 1, li);
         }
 
         function exportDocument(format) {
