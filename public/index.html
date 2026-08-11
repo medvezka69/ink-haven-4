@@ -2,9 +2,9 @@
 <html lang="ru" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Перо — Литературная платформа и редактор книг</title>
-    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, идеальная адаптивность под мобильные телефоны и ПК.">
+    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, удобная мобильная версия с фиксированной панелью и нижней навигацией.">
     
     <!-- FAST SYNCHRONOUS THEME RESTORE TO PREVENT FLICKER -->
     <script>
@@ -98,12 +98,12 @@
             width: 100%;
         }
 
-        /* Navbar */
+        /* Fixed Top Header Navbar */
         header {
             position: sticky;
             top: 0;
-            z-index: 50;
-            background: rgba(var(--bg-color), 0.9);
+            z-index: 100;
+            background: rgba(var(--bg-color), 0.95);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--card-border);
         }
@@ -267,6 +267,46 @@
 
         .btn-outline:hover {
             border-color: var(--primary-accent);
+            color: var(--primary-accent);
+        }
+
+        /* MOBILE BOTTOM NAVIGATION BAR (Smartphones Native Experience) */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--card-border);
+            z-index: 1000;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--muted-text);
+            cursor: pointer;
+            gap: 3px;
+            flex: 1;
+            height: 100%;
+            border: none;
+            background: transparent;
+        }
+
+        .mobile-nav-item i {
+            font-size: 18px;
+        }
+
+        .mobile-nav-item.active {
             color: var(--primary-accent);
         }
 
@@ -761,7 +801,7 @@
             color: var(--muted-text);
         }
 
-        /* FULL MOBILE & TABLET RESPONSIVE SYSTEM (SMARTPHONES & PCS) */
+        /* FULL MOBILE & TABLET RESPONSIVE SYSTEM (FIXED TOP NAVBAR & BOTTOM NAV) */
         @media (max-width: 992px) {
             .word-editor-wrapper {
                 grid-template-columns: 240px 1fr;
@@ -774,43 +814,51 @@
         }
 
         @media (max-width: 768px) {
+            body {
+                padding-bottom: 64px; /* Give room for fixed bottom nav */
+            }
+
+            header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 56px;
+                background: rgba(var(--bg-color), 0.98);
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            }
+
             .container {
                 padding: 0 12px;
             }
 
             .nav-wrapper {
-                flex-direction: column;
-                height: auto;
-                padding: 10px 0;
-                gap: 12px;
+                height: 56px;
+                padding: 0;
             }
 
             .nav-links {
-                width: 100%;
-                overflow-x: auto;
-                white-space: nowrap;
-                padding-bottom: 6px;
-                -webkit-overflow-scrolling: touch;
-                justify-content: flex-start;
+                display: none; /* Hidden from top bar on phones; moved to fixed bottom tab bar */
             }
 
-            .nav-btn {
-                padding: 6px 12px;
-                font-size: 13px;
-                flex-shrink: 0;
+            .mobile-bottom-nav {
+                display: flex; /* Show fixed bottom nav bar on mobile */
             }
 
             .nav-actions {
-                width: 100%;
-                justify-content: space-between;
+                gap: 8px;
+            }
+
+            .hero {
+                padding-top: 20px;
             }
 
             .hero h1 {
-                font-size: 28px;
+                font-size: 26px;
             }
 
             .hero p {
-                font-size: 15px;
+                font-size: 14px;
             }
 
             .grid-5 {
@@ -866,22 +914,23 @@
             }
 
             .document-viewport {
-                padding: 16px 8px;
+                padding: 16px 6px;
             }
 
             .paper-sheet {
-                padding: 24px 16px;
-                min-height: 500px;
+                padding: 20px 14px;
+                min-height: 450px;
                 font-size: 16px;
             }
 
             .notif-dropdown {
                 width: 290px;
                 right: -20px;
+                top: 44px;
             }
 
             .modal-content {
-                padding: 20px 16px;
+                padding: 20px 14px;
                 border-radius: 16px;
             }
         }
@@ -892,10 +941,12 @@
     <!-- Hidden Native File Input for Avatar Image Selection -->
     <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleAvatarFileSelect(event)">
 
-    <!-- Header Navigation -->
+    <!-- Header Navigation (FIXED ALWAYS AT TOP ON MOBILE & DESKTOP) -->
     <header>
         <div class="container nav-wrapper">
             <div class="logo" onclick="showTab('home', document.querySelectorAll('.nav-btn')[0])">Перо<span>.</span></div>
+            
+            <!-- Desktop Nav Links (Hidden on phones, replaced by fixed bottom nav) -->
             <nav class="nav-links">
                 <button class="nav-btn active" onclick="showTab('home', this)">Главная</button>
                 <button class="nav-btn" onclick="showTab('read', this)">Читать</button>
@@ -904,6 +955,7 @@
                 <button class="nav-btn" onclick="showTab('community', this)">Сообщество</button>
                 <button class="nav-btn" onclick="showTab('library', this)">Моя библиотека</button>
             </nav>
+
             <div class="nav-actions">
                 
                 <!-- Notification Bell with Instant Live Badge & Panel -->
@@ -932,7 +984,7 @@
                 </button>
 
                 <button class="btn-primary" onclick="showTab('write', document.querySelectorAll('.nav-btn')[2])">
-                    <i class="fa-solid fa-pen-nib"></i> Кабинет автора
+                    <i class="fa-solid fa-pen-nib"></i> <span style="display: inline-block;">Кабинет</span>
                 </button>
             </div>
         </div>
@@ -1294,6 +1346,30 @@
         </div>
 
     </main>
+
+    <!-- FIXED MOBILE BOTTOM NAVIGATION BAR (ON SMARTPHONES) -->
+    <div class="mobile-bottom-nav">
+        <button class="mobile-nav-item active" onclick="showTab('home', this, true)">
+            <i class="fa-solid fa-house"></i>
+            <span>Главная</span>
+        </button>
+        <button class="mobile-nav-item" onclick="showTab('read', this, true)">
+            <i class="fa-solid fa-book-open"></i>
+            <span>Читать</span>
+        </button>
+        <button class="mobile-nav-item" onclick="showTab('write', this, true)">
+            <i class="fa-solid fa-pen-nib"></i>
+            <span>Писать</span>
+        </button>
+        <button class="mobile-nav-item" onclick="showTab('profile', this, true)">
+            <i class="fa-solid fa-user"></i>
+            <span>Профиль</span>
+        </button>
+        <button class="mobile-nav-item" onclick="toggleNotificationsPanel(event)">
+            <i class="fa-solid fa-bell"></i>
+            <span>Инфо</span>
+        </button>
+    </div>
 
     <!-- BOOK READER MODAL -->
     <div class="modal" id="bookModal">
@@ -1915,12 +1991,19 @@
             updateWordCount();
         }
 
-        function showTab(tabName, btnElement) {
+        function showTab(tabName, btnElement, isMobileNav = false) {
             document.querySelectorAll('.tab-page').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.mobile-nav-item').forEach(btn => btn.classList.remove('active'));
+
             const targetPage = document.getElementById('tab-' + tabName);
             if (targetPage) targetPage.classList.add('active');
+
             if (btnElement) btnElement.classList.add('active');
+
+            if (isMobileNav) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
 
         function toggleTheme() {
