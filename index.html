@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Перо — Литературная платформа и редактор книг</title>
-    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, автосохранение темы без мерцания, уведомления и редактирование только своих книг.">
+    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, редактирование профиля автора, автосохранение темы без мерцания.">
     
     <!-- FAST SYNCHRONOUS THEME RESTORE TO PREVENT FLICKER -->
     <script>
         (function() {
             try {
-                var savedState = localStorage.getItem('pero_authorState_v3');
+                var savedState = localStorage.getItem('pero_authorState_v4');
+                if (!savedState) savedState = localStorage.getItem('pero_authorState_v3');
                 if (savedState) {
                     var parsed = JSON.parse(savedState);
                     if (parsed && parsed.theme === 'dark') {
@@ -882,9 +883,9 @@
                     </div>
                     
                     <div style="flex: 1;">
-                        <h2 style="font-size: 26px; font-weight: 700;" id="authorDisplayName">Полина Сергеева</h2>
-                        <p style="font-size: 14px; color: var(--muted-text);" id="authorUsername">@polina_author</p>
-                        <p style="margin-top: 8px; font-size: 15px;" id="authorBioText">Начинающий автор. Напишите свою первую книгу, находите читателей и развивайте свой аккаунт!</p>
+                        <h2 style="font-size: 26px; font-weight: 700;" id="authorDisplayName">Моё Имя Автора</h2>
+                        <p style="font-size: 14px; color: var(--muted-text);" id="authorUsername">@author</p>
+                        <p style="margin-top: 8px; font-size: 15px;" id="authorBioText">Нажмите «Редактировать профиль», чтобы указать своё имя автора, никнейм и рассказать о себе!</p>
                         
                         <div class="author-stats-row">
                             <span><strong id="statBooks">0</strong> книг</span>
@@ -1123,7 +1124,7 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
                     <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 20px; border-radius: 16px; display:flex; justify-content:space-between; align-items:center;">
                         <div>
-                            <h3 style="font-size: 18px; margin-bottom: 6px;">Полина Сергеева</h3>
+                            <h3 style="font-size: 18px; margin-bottom: 6px;" id="communityAuthorName">Моё Имя Автора</h3>
                             <p style="font-size: 13px; color: var(--muted-text);"><span id="communityFollowersCount">0</span> подписчиков</p>
                         </div>
                         <button class="btn-primary" style="padding: 6px 14px; font-size: 12px;" onclick="toggleFollowAuthor(this)"><i class="fa-solid fa-user-plus"></i> Подписаться</button>
@@ -1186,17 +1187,17 @@
 
                 <div>
                     <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Имя автора:</label>
-                    <input type="text" class="ai-textarea" id="editDisplayNameInput" value="Полина Сергеева">
+                    <input type="text" class="ai-textarea" id="editDisplayNameInput" value="Моё Имя Автора" placeholder="Введите ваше имя автора">
                 </div>
 
                 <div>
                     <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">Никнейм (@username):</label>
-                    <input type="text" class="ai-textarea" id="editUsernameInput" value="@polina_author">
+                    <input type="text" class="ai-textarea" id="editUsernameInput" value="@author" placeholder="@ваш_никнейм">
                 </div>
 
                 <div>
                     <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px;">О себе (Био автора):</label>
-                    <textarea class="ai-textarea" id="editBioInput" rows="4" placeholder="Расскажите о себе и вашем творчестве...">Начинающий автор. Напишите свою первую книгу, находите читателей и развивайте свой аккаунт!</textarea>
+                    <textarea class="ai-textarea" id="editBioInput" rows="4" placeholder="Расскажите о себе и вашем творчестве...">Напишите свою первую книгу, находите читателей и развивайте свой аккаунт!</textarea>
                 </div>
 
                 <button class="btn-primary" style="justify-content: center;" onclick="saveAuthorProfile()"><i class="fa-solid fa-check"></i> Сохранить профиль</button>
@@ -1213,9 +1214,9 @@
     <script>
         // State Object with Full LocalStorage Persistence & Real-time Notifications
         let authorState = {
-            name: "Полина Сергеева",
-            username: "@polina_author",
-            bio: "Начинающий автор. Напишите свою первую книгу, находите читателей и развивайте свой аккаунт!",
+            name: "Моё Имя Автора",
+            username: "@author",
+            bio: "Напишите свою первую книгу, находите читателей и развивайте свой аккаунт!",
             avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
             books: 0,
             followers: 0,
@@ -1314,10 +1315,10 @@
 
                 authorState.activeChapter = activeChapterIndex;
 
-                localStorage.setItem('pero_authorState_v3', JSON.stringify(authorState));
-                localStorage.setItem('pero_sampleChapters_v3', JSON.stringify(sampleChapters));
-                localStorage.setItem('pero_publishedBooks_v3', JSON.stringify(publishedBooksList));
-                localStorage.setItem('pero_notifications_v3', JSON.stringify(notificationsList));
+                localStorage.setItem('pero_authorState_v4', JSON.stringify(authorState));
+                localStorage.setItem('pero_sampleChapters_v4', JSON.stringify(sampleChapters));
+                localStorage.setItem('pero_publishedBooks_v4', JSON.stringify(publishedBooksList));
+                localStorage.setItem('pero_notifications_v4', JSON.stringify(notificationsList));
             } catch(e) {
                 console.error("LocalStorage save error:", e);
             }
@@ -1326,12 +1327,16 @@
         // Load All State from localStorage
         function loadFromLocalStorage() {
             try {
-                const savedState = localStorage.getItem('pero_authorState_v3');
+                let savedState = localStorage.getItem('pero_authorState_v4');
+                if (!savedState) savedState = localStorage.getItem('pero_authorState_v3');
+
                 if (savedState) {
                     authorState = Object.assign(authorState, JSON.parse(savedState));
                 }
 
-                const savedChapters = localStorage.getItem('pero_sampleChapters_v3');
+                let savedChapters = localStorage.getItem('pero_sampleChapters_v4');
+                if (!savedChapters) savedChapters = localStorage.getItem('pero_sampleChapters_v3');
+
                 if (savedChapters) {
                     const parsed = JSON.parse(savedChapters);
                     if (Array.isArray(parsed) && parsed.length > 0) {
@@ -1340,13 +1345,17 @@
                     }
                 }
 
-                const savedBooks = localStorage.getItem('pero_publishedBooks_v3');
+                let savedBooks = localStorage.getItem('pero_publishedBooks_v4');
+                if (!savedBooks) savedBooks = localStorage.getItem('pero_publishedBooks_v3');
+
                 if (savedBooks) {
                     const parsedB = JSON.parse(savedBooks);
                     if (Array.isArray(parsedB)) publishedBooksList = parsedB;
                 }
 
-                const savedNotifs = localStorage.getItem('pero_notifications_v3');
+                let savedNotifs = localStorage.getItem('pero_notifications_v4');
+                if (!savedNotifs) savedNotifs = localStorage.getItem('pero_notifications_v3');
+
                 if (savedNotifs) {
                     const parsedN = JSON.parse(savedNotifs);
                     if (Array.isArray(parsedN)) notificationsList = parsedN;
@@ -1366,6 +1375,9 @@
             // Profile & Bio UI
             const nameEl = document.getElementById('authorDisplayName');
             if (nameEl) nameEl.innerText = authorState.name;
+
+            const commNameEl = document.getElementById('communityAuthorName');
+            if (commNameEl) commNameEl.innerText = authorState.name;
 
             const unameEl = document.getElementById('authorUsername');
             if (unameEl) unameEl.innerText = authorState.username;
@@ -1389,12 +1401,12 @@
             const inputBio = document.getElementById('editBioInput');
             if (inputBio) inputBio.value = authorState.bio;
 
-            // Synchronous Theme Application to ensure zero flicker
-            const htmlClass = authorState.theme === 'dark' ? 'dark' : 'light';
+            // Synchronous Theme Application
+            const htmlClass = (authorState.theme === 'dark') ? 'dark' : 'light';
             document.documentElement.className = htmlClass;
             const icon = document.querySelector('#themeToggleBtn i');
             if (icon) {
-                icon.className = authorState.theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+                icon.className = (authorState.theme === 'dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
             }
 
             // Apply Counters & Notifications
@@ -1451,11 +1463,24 @@
                         </div>
                     `;
                     container.appendChild(card);
+
+                    // Add to Catalog if not present
+                    if (catalogContainer && !document.getElementById('catalog-book-' + idx)) {
+                        const catCard = card.cloneNode(true);
+                        catCard.id = 'catalog-book-' + idx;
+                        catCard.onclick = function() { openBookModal(b.title, b.author, b.genre, '1.2k', '5.0', b.content || 'Текст книги...', isAuthor, idx); };
+                        catalogContainer.appendChild(catCard);
+                    }
                 });
             }
         }
 
         function continueWritingBook(idx) {
+            const b = publishedBooksList[idx];
+            if (b && b.author !== authorState.name) {
+                alert('Вы можете продолжить писать только свои собственные книги!');
+                return;
+            }
             showTab('write', document.querySelectorAll('.nav-btn')[2]);
             if (publishedBooksList[idx]) {
                 selectEditorChapter(0, document.querySelectorAll('#chapterList .chapter-card')[0]);
@@ -1477,7 +1502,7 @@
                     document.getElementById('authorAvatar').src = dataUrl;
                     document.getElementById('modalAvatarPreview').src = dataUrl;
                     saveToLocalStorage();
-                    addNotification("📸 Автор уставил новое фото аватара", "fa-camera");
+                    addNotification("📸 Автор установил новое фото аватара", "fa-camera");
                     alert('✨ Новое фото аватара сохранено!');
                 };
                 reader.readAsDataURL(file);
@@ -1494,6 +1519,9 @@
             authorState.bio = bio;
 
             document.getElementById('authorDisplayName').innerText = authorState.name;
+            const commName = document.getElementById('communityAuthorName');
+            if (commName) commName.innerText = authorState.name;
+
             document.getElementById('authorUsername').innerText = authorState.username;
             document.getElementById('authorBioText').innerText = authorState.bio;
 
@@ -1501,7 +1529,7 @@
             closeEditProfileModal();
             addNotification("📝 Автор " + authorState.name + " обновил профиль и био", "fa-user-pen");
             renderPublishedBooks();
-            alert('🎉 Профиль и био автора успешно сохранены!');
+            alert('🎉 Профиль и имя автора успешно сохранены!');
         }
 
         function renderChaptersList() {
