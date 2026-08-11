@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Перо — Литературная платформа и редактор книг</title>
-    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, редактирование профиля автора, автосохранение темы без мерцания.">
+    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, редактирование названия книги в начале письма, автосохранение всех данных.">
     
     <!-- FAST SYNCHRONOUS THEME RESTORE TO PREVENT FLICKER -->
     <script>
@@ -415,7 +415,7 @@
             background: var(--card-bg);
             overflow: hidden;
             box-shadow: var(--shadow-soft);
-            margin-top: 20px;
+            margin-top: 16px;
             display: grid;
             grid-template-columns: 270px 1fr 340px;
             min-height: 750px;
@@ -927,18 +927,40 @@
             </section>
         </div>
 
-        <!-- TAB 4: WRITE STUDIO -->
+        <!-- TAB 4: WRITE STUDIO WITH BOOK TITLE AND GENRE EDITOR BAR AT THE START OF WRITING -->
         <div id="tab-write" class="tab-page">
             <section class="section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <div>
                         <h1 style="font-size: 30px; font-weight: 700;">Кабинет автора — Редактор рукописи с AI</h1>
-                        <p style="color: var(--muted-text); font-size: 14px;">Автоматическое сохранение всех данных профиля, биографии и рукописи при написании.</p>
+                        <p style="color: var(--muted-text); font-size: 14px;">Автоматическое сохранение названий, данных профиля, биографии и рукописи при написании.</p>
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <button class="btn-primary" onclick="toggleAiPanel()"><i class="fa-solid fa-wand-magic-sparkles"></i> AI-помощник</button>
                         <button class="btn-outline" onclick="exportDocument('txt')"><i class="fa-solid fa-file-arrow-down"></i> Экспорт TXT</button>
                         <button class="btn-primary" onclick="publishBook()"><i class="fa-solid fa-cloud-arrow-up"></i> Опубликовать книгу</button>
+                    </div>
+                </div>
+
+                <!-- EDITABLE BOOK TITLE & GENRE BAR AT THE START OF WRITING -->
+                <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 16px 20px; border-radius: 16px; margin-bottom: 16px; display: flex; gap: 16px; align-items: center; box-shadow: var(--shadow-soft); flex-wrap: wrap;">
+                    <div style="font-size: 24px; color: var(--primary-accent);"><i class="fa-solid fa-book-bookmark"></i></div>
+                    <div style="flex: 1; min-width: 280px;">
+                        <label style="font-size: 11px; font-weight: 700; color: var(--muted-text); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Название вашей книги в начале письма:</label>
+                        <input type="text" class="ai-textarea" id="manuscriptBookTitleInput" style="font-size: 18px; font-weight: 700; padding: 8px 12px;" value="Моя новая книга" placeholder="Введите название вашей книги..." oninput="onBookTitleChange(this.value)">
+                    </div>
+                    <div style="width: 200px;">
+                        <label style="font-size: 11px; font-weight: 700; color: var(--muted-text); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Жанр книги:</label>
+                        <select class="tool-select" id="manuscriptBookGenreSelect" style="width: 100%; height: 38px; font-size: 14px;" onchange="onBookGenreChange(this.value)">
+                            <option value="Роман" selected>Роман</option>
+                            <option value="Фэнтези">Фэнтези</option>
+                            <option value="Фантастика">Фантастика</option>
+                            <option value="Детектив">Детектив</option>
+                            <option value="Триллер">Триллер</option>
+                            <option value="Драма">Драма</option>
+                            <option value="Приключения">Приключения</option>
+                            <option value="Поэзия">Поэзия</option>
+                        </select>
                     </div>
                 </div>
 
@@ -1212,12 +1234,14 @@
     </footer>
 
     <script>
-        // State Object with Full LocalStorage Persistence & Real-time Notifications
+        // State Object with Full LocalStorage Persistence, Customizable Book Title & Genre
         let authorState = {
             name: "Моё Имя Автора",
             username: "@author",
             bio: "Напишите свою первую книгу, находите читателей и развивайте свой аккаунт!",
             avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80",
+            bookTitle: "Моя новая книга",
+            bookGenre: "Роман",
             books: 0,
             followers: 0,
             likes: 0,
@@ -1236,7 +1260,7 @@
         ];
         let activeChapterIndex = 0;
 
-        // Real-Time Notification System with Immediate Timestamping
+        // Real-Time Notification System
         function addNotification(text, icon = "fa-bell") {
             const now = new Date();
             const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -1294,6 +1318,17 @@
                 panel.classList.remove('active');
             }
         });
+
+        // Book Title & Genre Edit at start of writing
+        function onBookTitleChange(newTitle) {
+            authorState.bookTitle = newTitle || "Без названия";
+            saveToLocalStorage();
+        }
+
+        function onBookGenreChange(newGenre) {
+            authorState.bookGenre = newGenre || "Роман";
+            saveToLocalStorage();
+        }
 
         // Auto-save typing input on paper editor
         function onPaperEditorInput() {
@@ -1391,6 +1426,13 @@
             const previewEl = document.getElementById('modalAvatarPreview');
             if (previewEl) previewEl.src = authorState.avatar;
 
+            // Book Title & Genre Inputs
+            const titleInput = document.getElementById('manuscriptBookTitleInput');
+            if (titleInput && authorState.bookTitle) titleInput.value = authorState.bookTitle;
+
+            const genreSelect = document.getElementById('manuscriptBookGenreSelect');
+            if (genreSelect && authorState.bookGenre) genreSelect.value = authorState.bookGenre;
+
             // Modal Input Fields
             const inputName = document.getElementById('editDisplayNameInput');
             if (inputName) inputName.value = authorState.name;
@@ -1481,10 +1523,19 @@
                 alert('Вы можете продолжить писать только свои собственные книги!');
                 return;
             }
-            showTab('write', document.querySelectorAll('.nav-btn')[2]);
-            if (publishedBooksList[idx]) {
-                selectEditorChapter(0, document.querySelectorAll('#chapterList .chapter-card')[0]);
+
+            if (b) {
+                authorState.bookTitle = b.title;
+                authorState.bookGenre = b.genre;
+                const titleInput = document.getElementById('manuscriptBookTitleInput');
+                if (titleInput) titleInput.value = b.title;
+
+                const genreSelect = document.getElementById('manuscriptBookGenreSelect');
+                if (genreSelect) genreSelect.value = b.genre;
             }
+
+            showTab('write', document.querySelectorAll('.nav-btn')[2]);
+            selectEditorChapter(0, document.querySelectorAll('#chapterList .chapter-card')[0]);
         }
 
         function triggerAvatarUpload() {
@@ -1576,7 +1627,7 @@
                 saveToLocalStorage();
                 renderChaptersList();
                 selectEditorChapter(activeChapterIndex, document.querySelectorAll('#chapterList .chapter-card')[activeChapterIndex]);
-                addNotification("🗑️ Удалена глава «" + deletedName + "» из рукописи", "fa-trash");
+                addNotification("🗑️ Удалена глава «" + deletedName + "» из книги «" + authorState.bookTitle + "»", "fa-trash");
             }
         }
 
@@ -1593,7 +1644,7 @@
             saveToLocalStorage();
             renderChaptersList();
             selectEditorChapter(activeChapterIndex, document.querySelectorAll('#chapterList .chapter-card')[activeChapterIndex]);
-            addNotification("✨ Автор " + authorState.name + " создал главу: «" + newTitle + "»", "fa-file-circle-plus");
+            addNotification("✨ Автор " + authorState.name + " создал главу «" + newTitle + "» в книге «" + authorState.bookTitle + "»", "fa-file-circle-plus");
         }
 
         const aiPlotVariations = {
@@ -1635,7 +1686,7 @@
             if (!currentGeneratedAiHtml) return;
             formatDoc('insertHTML', '<p style="margin: 12px 0;">' + currentGeneratedAiHtml + '</p>');
             saveToLocalStorage();
-            addNotification("🪄 Использованы идеи AI в тексте рукописи", "fa-wand-magic-sparkles");
+            addNotification("🪄 Использованы идеи AI в книге «" + authorState.bookTitle + "»", "fa-wand-magic-sparkles");
             alert('✨ Текст AI успешно вставлен!');
         }
 
@@ -1674,17 +1725,22 @@
             authorState.likes += 1;
             saveToLocalStorage();
             updateAuthorUI();
-            addNotification("❤️ Ваша книга получила новый лайк!", "fa-heart");
+            addNotification("❤️ Ваша книга «" + authorState.bookTitle + "» получила новый лайк!", "fa-heart");
         }
 
         function publishBook() {
             authorState.books += 1;
-            const bookTitle = "Моя книга " + authorState.books;
+            const customTitle = (document.getElementById('manuscriptBookTitleInput')?.value.trim()) || authorState.bookTitle || ("Моя книга " + authorState.books);
+            const customGenre = (document.getElementById('manuscriptBookGenreSelect')?.value) || authorState.bookGenre || "Роман";
+
+            authorState.bookTitle = customTitle;
+            authorState.bookGenre = customGenre;
+
             const currentContent = sampleChapters[activeChapterIndex] ? sampleChapters[activeChapterIndex].content : "";
             
             publishedBooksList.push({
-                title: bookTitle,
-                genre: "Роман",
+                title: customTitle,
+                genre: customGenre,
                 author: authorState.name,
                 content: currentContent
             });
@@ -1692,8 +1748,8 @@
             saveToLocalStorage();
             updateAuthorUI();
             renderPublishedBooks();
-            addNotification("🎉 Автор " + authorState.name + " опубликовал новую книгу «" + bookTitle + "»!", "fa-cloud-arrow-up");
-            alert('🎉 Книга «' + bookTitle + '» успешно опубликована!');
+            addNotification("🎉 Автор " + authorState.name + " опубликовал книгу «" + customTitle + "»!", "fa-cloud-arrow-up");
+            alert('🎉 Книга «' + customTitle + '» успешно опубликована!');
         }
 
         function openEditProfileModal() { document.getElementById('editProfileModal').classList.add('active'); }
@@ -1871,7 +1927,7 @@
             const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'Глава.txt';
+            link.download = (authorState.bookTitle || 'Книга') + '.txt';
             link.click();
         }
 
