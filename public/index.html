@@ -4,7 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Перо — Литературная платформа и редактор книг</title>
-    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, интерактивные опубликованные книги, уведомления о новых главах и кнопка 'Продолжить писать'.">
+    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, автосохранение темы без мерцания, уведомления и редактирование только своих книг.">
+    
+    <!-- FAST SYNCHRONOUS THEME RESTORE TO PREVENT FLICKER -->
+    <script>
+        (function() {
+            try {
+                var savedState = localStorage.getItem('pero_authorState_v3');
+                if (savedState) {
+                    var parsed = JSON.parse(savedState);
+                    if (parsed && parsed.theme === 'dark') {
+                        document.documentElement.className = 'dark';
+                    } else {
+                        document.documentElement.className = 'light';
+                    }
+                }
+            } catch(e) {}
+        })();
+    </script>
+
     <!-- Google Fonts Expansion (All 12 Fonts) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,7 +70,6 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
         }
 
         body {
@@ -758,9 +775,9 @@
             </nav>
             <div class="nav-actions">
                 
-                <!-- Notification Bell with Live Counter & Dropdown -->
+                <!-- Notification Bell with Instant Live Badge & Panel -->
                 <div style="position: relative;">
-                    <button class="icon-btn" onclick="toggleNotificationsPanel(event)" id="notifBellBtn" title="Уведомления об обновлениях и главах">
+                    <button class="icon-btn" onclick="toggleNotificationsPanel(event)" id="notifBellBtn" title="Уведомления об обновлениях">
                         <i class="fa-solid fa-bell"></i>
                         <span class="notif-badge" id="notifBadgeCount" style="display:none;">0</span>
                     </button>
@@ -768,7 +785,7 @@
                     <!-- Notifications Dropdown Popup -->
                     <div class="notif-dropdown" id="notifDropdown">
                         <div class="notif-header">
-                            <h3>Уведомления об обновлениях</h3>
+                            <h3>Уведомления и обновления</h3>
                             <button onclick="clearNotifications()" style="border:none; background:none; color:var(--primary-accent); font-size:12px; cursor:pointer; font-weight:600;">Очистить</button>
                         </div>
                         <div class="notif-list" id="notifList">
@@ -909,7 +926,7 @@
             </section>
         </div>
 
-        <!-- TAB 4: WRITE STUDIO (With Real-Time Manuscript Auto-Save) -->
+        <!-- TAB 4: WRITE STUDIO -->
         <div id="tab-write" class="tab-page">
             <section class="section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -1125,7 +1142,7 @@
 
     </main>
 
-    <!-- BOOK READER MODAL (Interactive Reading & Continue Writing Button) -->
+    <!-- BOOK READER MODAL -->
     <div class="modal" id="bookModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeBookModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -1138,9 +1155,8 @@
                     <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 6px;" id="modalTitle">Название книги</h2>
                     <p style="font-size: 15px; color: var(--muted-text); margin-bottom: 16px;" id="modalAuthor">Автор</p>
                     
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn-primary" onclick="continueWritingBookFromModal()"><i class="fa-solid fa-pen-to-square"></i> Продолжить писать</button>
-                        <button class="btn-outline" onclick="alert('Вы уже читаете эту книгу!')"><i class="fa-solid fa-book-open"></i> Читать главу</button>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="modalActionButtons">
+                        <!-- Dynamic buttons based on ownership -->
                     </div>
                 </div>
             </div>
@@ -1195,7 +1211,7 @@
     </footer>
 
     <script>
-        // State Object with Full LocalStorage Persistence & Notifications
+        // State Object with Full LocalStorage Persistence & Real-time Notifications
         let authorState = {
             name: "Полина Сергеева",
             username: "@polina_author",
@@ -1219,12 +1235,15 @@
         ];
         let activeChapterIndex = 0;
 
-        // Notifications UI System
+        // Real-Time Notification System with Immediate Timestamping
         function addNotification(text, icon = "fa-bell") {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
             const newNotif = {
                 id: Date.now(),
                 text: text,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                time: timeStr,
                 icon: icon
             };
             notificationsList.unshift(newNotif);
@@ -1370,11 +1389,12 @@
             const inputBio = document.getElementById('editBioInput');
             if (inputBio) inputBio.value = authorState.bio;
 
-            // Apply Theme
-            if (authorState.theme === 'dark') {
-                document.documentElement.className = 'dark';
-                const icon = document.querySelector('#themeToggleBtn i');
-                if (icon) icon.className = 'fa-solid fa-sun';
+            // Synchronous Theme Application to ensure zero flicker
+            const htmlClass = authorState.theme === 'dark' ? 'dark' : 'light';
+            document.documentElement.className = htmlClass;
+            const icon = document.querySelector('#themeToggleBtn i');
+            if (icon) {
+                icon.className = authorState.theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
             }
 
             // Apply Counters & Notifications
@@ -1404,9 +1424,20 @@
                 container.querySelectorAll('.book-card').forEach(c => c.remove());
 
                 publishedBooksList.forEach((b, idx) => {
+                    const isAuthor = (b.author === authorState.name);
                     const card = document.createElement('div');
                     card.className = 'book-card';
-                    card.onclick = function() { openBookModal(b.title, b.author, b.genre, '1.2k', '5.0', b.content || 'Текст книги...'); };
+                    card.onclick = function() { openBookModal(b.title, b.author, b.genre, '1.2k', '5.0', b.content || 'Текст книги...', isAuthor, idx); };
+
+                    let actionBtnHtml = isAuthor ? `
+                        <button class="btn-primary" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;" onclick="event.stopPropagation(); continueWritingBook(${idx})">
+                            <i class="fa-solid fa-pen-to-square"></i> Продолжить писать
+                        </button>
+                    ` : `
+                        <button class="btn-outline" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;" onclick="event.stopPropagation(); openBookModal('${b.title}', '${b.author}', '${b.genre}', '1.2k', '5.0', '${b.content || "Текст книги..."}', false, ${idx})">
+                            <i class="fa-solid fa-book-open"></i> Читать главу
+                        </button>
+                    `;
 
                     card.innerHTML = `
                         <div class="book-cover">${b.title}</div>
@@ -1415,21 +1446,11 @@
                             <div class="book-title">${b.title}</div>
                             <div class="book-author">${b.author}</div>
                             <div style="margin-top: auto; padding-top: 10px;">
-                                <button class="btn-primary" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;" onclick="event.stopPropagation(); continueWritingBook(${idx})">
-                                    <i class="fa-solid fa-pen-to-square"></i> Продолжить писать
-                                </button>
+                                ${actionBtnHtml}
                             </div>
                         </div>
                     `;
                     container.appendChild(card);
-
-                    // Add to Catalog if not present
-                    if (catalogContainer && !document.getElementById('catalog-book-' + idx)) {
-                        const catCard = card.cloneNode(true);
-                        catCard.id = 'catalog-book-' + idx;
-                        catCard.onclick = function() { openBookModal(b.title, b.author, b.genre, '1.2k', '5.0', b.content || 'Текст книги...'); };
-                        catalogContainer.appendChild(catCard);
-                    }
                 });
             }
         }
@@ -1439,11 +1460,6 @@
             if (publishedBooksList[idx]) {
                 selectEditorChapter(0, document.querySelectorAll('#chapterList .chapter-card')[0]);
             }
-        }
-
-        function continueWritingBookFromModal() {
-            closeBookModal();
-            showTab('write', document.querySelectorAll('.nav-btn')[2]);
         }
 
         function triggerAvatarUpload() {
@@ -1461,6 +1477,7 @@
                     document.getElementById('authorAvatar').src = dataUrl;
                     document.getElementById('modalAvatarPreview').src = dataUrl;
                     saveToLocalStorage();
+                    addNotification("📸 Автор уставил новое фото аватара", "fa-camera");
                     alert('✨ Новое фото аватара сохранено!');
                 };
                 reader.readAsDataURL(file);
@@ -1483,6 +1500,7 @@
             saveToLocalStorage();
             closeEditProfileModal();
             addNotification("📝 Автор " + authorState.name + " обновил профиль и био", "fa-user-pen");
+            renderPublishedBooks();
             alert('🎉 Профиль и био автора успешно сохранены!');
         }
 
@@ -1547,7 +1565,7 @@
             saveToLocalStorage();
             renderChaptersList();
             selectEditorChapter(activeChapterIndex, document.querySelectorAll('#chapterList .chapter-card')[activeChapterIndex]);
-            addNotification("✨ Автор добавил новую главу: «" + newTitle + "»", "fa-file-circle-plus");
+            addNotification("✨ Автор " + authorState.name + " создал главу: «" + newTitle + "»", "fa-file-circle-plus");
         }
 
         const aiPlotVariations = {
@@ -1589,6 +1607,7 @@
             if (!currentGeneratedAiHtml) return;
             formatDoc('insertHTML', '<p style="margin: 12px 0;">' + currentGeneratedAiHtml + '</p>');
             saveToLocalStorage();
+            addNotification("🪄 Использованы идеи AI в тексте рукописи", "fa-wand-magic-sparkles");
             alert('✨ Текст AI успешно вставлен!');
         }
 
@@ -1645,7 +1664,7 @@
             saveToLocalStorage();
             updateAuthorUI();
             renderPublishedBooks();
-            addNotification("🎉 Автор " + authorState.name + " опубликовал книгу «" + bookTitle + "»!", "fa-cloud-arrow-up");
+            addNotification("🎉 Автор " + authorState.name + " опубликовал новую книгу «" + bookTitle + "»!", "fa-cloud-arrow-up");
             alert('🎉 Книга «' + bookTitle + '» успешно опубликована!');
         }
 
@@ -1694,25 +1713,39 @@
             const html = document.documentElement;
             const btnIcon = document.querySelector('#themeToggleBtn i');
             if (html.classList.contains('dark')) {
-                html.classList.remove('dark');
-                html.classList.add('light');
+                html.className = 'light';
                 authorState.theme = 'light';
-                btnIcon.className = 'fa-solid fa-moon';
+                if (btnIcon) btnIcon.className = 'fa-solid fa-moon';
             } else {
-                html.classList.remove('light');
-                html.classList.add('dark');
+                html.className = 'dark';
                 authorState.theme = 'dark';
-                btnIcon.className = 'fa-solid fa-sun';
+                if (btnIcon) btnIcon.className = 'fa-solid fa-sun';
             }
             saveToLocalStorage();
         }
 
-        function openBookModal(title, author, genre, views, rating, desc) {
+        function openBookModal(title, author, genre, views, rating, desc, isAuthor = false, idx = 0) {
             document.getElementById('modalTitle').innerText = title;
             document.getElementById('modalAuthor').innerText = author;
             document.getElementById('modalGenre').innerText = genre;
             document.getElementById('modalCover').innerText = title;
             if (desc) document.getElementById('modalBookContent').innerHTML = desc;
+
+            const actionsBox = document.getElementById('modalActionButtons');
+            if (actionsBox) {
+                if (isAuthor || author === authorState.name) {
+                    actionsBox.innerHTML = `
+                        <button class="btn-primary" onclick="closeBookModal(); continueWritingBook(${idx});"><i class="fa-solid fa-pen-to-square"></i> Продолжить писать книгу</button>
+                        <button class="btn-outline" onclick="alert('Вы просматриваете свою книгу!')"><i class="fa-solid fa-book-open"></i> Просмотр глав</button>
+                    `;
+                } else {
+                    actionsBox.innerHTML = `
+                        <button class="btn-primary" onclick="alert('Спасибо за чтение! Оставьте комментарий ниже.')"><i class="fa-solid fa-book-open"></i> Читать главу</button>
+                        <button class="btn-outline" onclick="alert('Книга добавлена в вашу библиотеку!')"><i class="fa-solid fa-bookmark"></i> В библиотеку</button>
+                    `;
+                }
+            }
+
             document.getElementById('bookModal').classList.add('active');
         }
 
