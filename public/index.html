@@ -1016,7 +1016,7 @@
                 </div>
             </section>
 
-            <!-- Popular Section (No emojis in headers) -->
+            <!-- Popular Section (User published books show at the VERY TOP) -->
             <section class="section">
                 <div class="section-header">
                     <h2 class="section-title">Сейчас популярно</h2>
@@ -1024,6 +1024,17 @@
                 </div>
                 <div class="grid-5" id="homePopularBooksGrid">
                     <!-- Featured popular books populate here -->
+                </div>
+            </section>
+
+            <!-- New Releases Section (Новинки от авторов) -->
+            <section class="section" style="padding-top: 10px;">
+                <div class="section-header">
+                    <h2 class="section-title">Новинки от авторов</h2>
+                    <a href="#" style="color: var(--primary-accent); font-size: 14px; font-weight: 600;" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">Смотреть все новинки</a>
+                </div>
+                <div class="grid-5" id="homeNewReleasesGrid">
+                    <!-- New releases populate here -->
                 </div>
             </section>
 
@@ -1630,6 +1641,7 @@
         function renderAllBooksGrid() {
             const catalogContainer = document.getElementById('catalogBooksList');
             const homePopularContainer = document.getElementById('homePopularBooksGrid');
+            const homeNewReleasesContainer = document.getElementById('homeNewReleasesGrid');
             if (!catalogContainer) return;
 
             // Make sure publishedBooksList is synced from LocalStorage if needed
@@ -1642,19 +1654,20 @@
                 }
             } catch(e){}
 
-            // Combine user published books + public shared registry + featured books
+            // Map user published books dynamically at the VERY TOP of all lists
             let userBooksMapped = publishedBooksList.map((b, idx) => ({
                 id: 'pub_' + idx,
                 title: b.title,
                 author: b.author || authorState.name,
                 genre: b.genre || "Роман",
-                views: "1.8k",
+                views: "2.4k",
                 rating: "5.0",
                 content: b.content || "Текст книги...",
                 isUserBook: true,
                 userIndex: idx
             }));
 
+            // Combine user published books + public shared registry + featured platform books
             let allBooks = [].concat(userBooksMapped, globalPublicBooksRegistry, featuredPlatformBooks);
 
             // Apply Live Search and Genre Filters
@@ -1732,7 +1745,7 @@
                 });
             }
 
-            // Render Home Popular Grid (First 4 books)
+            // Render Homepage Popular Grid (Shows User Published Books FIRST + Popular Picks)
             if (homePopularContainer) {
                 homePopularContainer.innerHTML = '';
                 allBooks.slice(0, 4).forEach(b => {
@@ -1742,7 +1755,7 @@
                     card.onclick = function() { openBookModal(b.title, b.isUserBook ? authorState.name : b.author, b.genre, b.views, b.rating, b.content, isAuthor, b.userIndex || 0); };
                     card.innerHTML = `
                         <div class="book-cover">
-                            <span class="book-cover-badge">${b.isUserBook ? 'Ваша книга' : 'Популярное'}</span>
+                            <span class="book-cover-badge">${b.isUserBook ? '🔥 Популярное автора' : '🔥 Популярное'}</span>
                             ${b.title}
                         </div>
                         <div class="book-info">
@@ -1752,6 +1765,30 @@
                         </div>
                     `;
                     homePopularContainer.appendChild(card);
+                });
+            }
+
+            // Render Homepage New Releases Grid (✨ Новинки от авторов)
+            if (homeNewReleasesContainer) {
+                homeNewReleasesContainer.innerHTML = '';
+                let newReleases = [].concat(userBooksMapped, allBooks.filter(x => !x.isUserBook));
+                newReleases.slice(0, 4).forEach(b => {
+                    const isAuthor = b.isUserBook || (b.author === authorState.name);
+                    const card = document.createElement('div');
+                    card.className = 'book-card';
+                    card.onclick = function() { openBookModal(b.title, b.isUserBook ? authorState.name : b.author, b.genre, b.views, b.rating, b.content, isAuthor, b.userIndex || 0); };
+                    card.innerHTML = `
+                        <div class="book-cover" style="background: linear-gradient(135deg, #10b981, #047857);">
+                            <span class="book-cover-badge" style="background: #059669;">✨ Новинка</span>
+                            ${b.title}
+                        </div>
+                        <div class="book-info">
+                            <div class="book-genre">${b.genre}</div>
+                            <div class="book-title">${b.title}</div>
+                            <div class="book-author"><i class="fa-regular fa-user"></i> ${b.isUserBook ? authorState.name : b.author}</div>
+                        </div>
+                    `;
+                    homeNewReleasesContainer.appendChild(card);
                 });
             }
         }
@@ -1921,7 +1958,7 @@
                     const isAuthor = (b.author === authorState.name);
                     const card = document.createElement('div');
                     card.className = 'book-card';
-                    card.onclick = function() { openBookModal(b.title, authorState.name, b.genre, '1.8k', '5.0', b.content || 'Текст книги...', isAuthor, idx); };
+                    card.onclick = function() { openBookModal(b.title, authorState.name, b.genre, '2.4k', '5.0', b.content || 'Текст книги...', isAuthor, idx); };
 
                     card.innerHTML = `
                         <div class="book-cover">${b.title}</div>
