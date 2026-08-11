@@ -57,7 +57,7 @@ function LibraryPage() {
   const move = async (bookId: string, shelf: string) => {
     await supabase
       .from("library_items")
-      .update({ shelf: shelf as Item["shelf"] })
+      .update({ shelf: shelf as "reading" | "saved" | "finished" | "want" })
       .eq("user_id", user!.id)
       .eq("book_id", bookId);
     qc.invalidateQueries({ queryKey: ["library"] });
