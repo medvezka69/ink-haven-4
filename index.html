@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Перо — Литературная платформа и редактор книг</title>
-    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, автосохранение всех данных в localStorage.">
+    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, интерактивные опубликованные книги, уведомления о новых главах и кнопка 'Продолжить писать'.">
     <!-- Google Fonts Expansion (All 12 Fonts) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -135,12 +135,81 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            position: relative;
         }
 
         .icon-btn:hover {
             border-color: var(--primary-accent);
             color: var(--primary-accent);
         }
+
+        /* Notification Badge */
+        .notif-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            border: 2px solid var(--card-bg);
+        }
+
+        /* Notification Dropdown Panel */
+        .notif-dropdown {
+            position: absolute;
+            top: 48px;
+            right: 0;
+            width: 340px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lift);
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .notif-dropdown.active { display: flex; }
+
+        .notif-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--secondary-bg);
+        }
+
+        .notif-header h3 { font-size: 14px; font-weight: 700; }
+
+        .notif-list {
+            max-height: 320px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notif-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--card-border);
+            font-size: 13px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item i { color: var(--primary-accent); margin-top: 2px; }
+        .notif-time { font-size: 11px; color: var(--muted-text); margin-top: 4px; }
 
         .btn-primary {
             background-color: var(--primary-accent);
@@ -208,6 +277,8 @@
             box-shadow: var(--shadow-soft);
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
         }
 
         .book-card:hover {
@@ -216,7 +287,7 @@
         }
 
         .book-cover {
-            height: 250px;
+            height: 230px;
             background: linear-gradient(135deg, #7c3aed, #4c1d95);
             display: flex;
             align-items: flex-end;
@@ -243,11 +314,11 @@
             color: #fff;
         }
 
-        .book-info { padding: 16px; }
+        .book-info { padding: 16px; display: flex; flex-direction: column; flex: 1; }
         .book-genre { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted-text); margin-bottom: 4px; }
         .book-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--text-color); }
         .book-author { font-size: 13px; color: var(--muted-text); margin-bottom: 12px; }
-        .book-stats { display: flex; gap: 14px; font-size: 12px; color: var(--muted-text); }
+        .book-stats { display: flex; gap: 14px; font-size: 12px; color: var(--muted-text); margin-top: auto; }
 
         /* Genres */
         .genre-chips { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -686,9 +757,32 @@
                 <button class="nav-btn" onclick="showTab('library', this)">Моя библиотека</button>
             </nav>
             <div class="nav-actions">
+                
+                <!-- Notification Bell with Live Counter & Dropdown -->
+                <div style="position: relative;">
+                    <button class="icon-btn" onclick="toggleNotificationsPanel(event)" id="notifBellBtn" title="Уведомления об обновлениях и главах">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="notif-badge" id="notifBadgeCount" style="display:none;">0</span>
+                    </button>
+
+                    <!-- Notifications Dropdown Popup -->
+                    <div class="notif-dropdown" id="notifDropdown">
+                        <div class="notif-header">
+                            <h3>Уведомления об обновлениях</h3>
+                            <button onclick="clearNotifications()" style="border:none; background:none; color:var(--primary-accent); font-size:12px; cursor:pointer; font-weight:600;">Очистить</button>
+                        </div>
+                        <div class="notif-list" id="notifList">
+                            <div style="padding: 20px; text-align: center; color: var(--muted-text); font-size: 13px;" id="emptyNotifMsg">
+                                Пока нет новых уведомлений.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <button class="icon-btn" onclick="toggleTheme()" id="themeToggleBtn" title="Переключить тему">
                     <i class="fa-solid fa-moon"></i>
                 </button>
+
                 <button class="btn-primary" onclick="showTab('write', document.querySelectorAll('.nav-btn')[2])">
                     <i class="fa-solid fa-pen-nib"></i> Кабинет автора
                 </button>
@@ -802,7 +896,7 @@
             <section class="section">
                 <h1 style="font-size: 32px; margin-bottom: 8px;">Каталог книг</h1>
                 <p style="color: var(--muted-text); margin-bottom: 24px;">Нажмите на любую книгу, чтобы открыть её.</p>
-                <div class="grid-5">
+                <div class="grid-5" id="catalogBooksList">
                     <div class="book-card" onclick="openBookModal('Тень Забытого Замка', 'Александр Грин', 'Фэнтези', '0', '5.0', 'В глубине проклятого леса стоит древний замок...')">
                         <div class="book-cover">Тень Забытого Замка</div>
                         <div class="book-info">
@@ -1031,16 +1125,31 @@
 
     </main>
 
-    <!-- BOOK READER MODAL -->
+    <!-- BOOK READER MODAL (Interactive Reading & Continue Writing Button) -->
     <div class="modal" id="bookModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closeBookModal()"><i class="fa-solid fa-xmark"></i></button>
-            <div style="display: flex; gap: 24px; margin-bottom: 20px;">
-                <div style="width: 130px; height: 180px; background: linear-gradient(135deg, var(--primary-accent), #4c1d95); border-radius: 12px; display: flex; align-items: flex-end; padding: 12px; color: #fff; font-weight: 700;" id="modalCover">Обложка</div>
-                <div style="flex: 1;">
-                    <div style="font-size: 12px; text-transform: uppercase;" id="modalGenre">Жанр</div>
-                    <h2 style="font-size: 26px; font-weight: 700;" id="modalTitle">Название книги</h2>
-                    <p style="font-size: 14px; color: var(--muted-text);" id="modalAuthor">Автор</p>
+            
+            <div style="display: flex; gap: 24px; margin-bottom: 24px; flex-wrap: wrap;">
+                <div style="width: 140px; height: 200px; background: linear-gradient(135deg, var(--primary-accent), #4c1d95); border-radius: 12px; display: flex; align-items: flex-end; padding: 16px; color: #fff; font-weight: 700; font-size: 18px;" id="modalCover">Обложка</div>
+                
+                <div style="flex: 1; min-width: 260px;">
+                    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted-text); margin-bottom: 4px;" id="modalGenre">Жанр</div>
+                    <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 6px;" id="modalTitle">Название книги</h2>
+                    <p style="font-size: 15px; color: var(--muted-text); margin-bottom: 16px;" id="modalAuthor">Автор</p>
+                    
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-primary" onclick="continueWritingBookFromModal()"><i class="fa-solid fa-pen-to-square"></i> Продолжить писать</button>
+                        <button class="btn-outline" onclick="alert('Вы уже читаете эту книгу!')"><i class="fa-solid fa-book-open"></i> Читать главу</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chapter Reader Content Inside Modal -->
+            <div style="border-top: 1px solid var(--card-border); padding-top: 20px;">
+                <h3 style="font-size: 18px; margin-bottom: 12px;">Содержание книги:</h3>
+                <div style="background: var(--secondary-bg); padding: 20px; border-radius: 12px; font-size: 16px; line-height: 1.8;" id="modalBookContent">
+                    <p>Солнце медленно опускалось за вершины старого леса, отбрасывая длинные багровые тени на каменные плиты двора...</p>
                 </div>
             </div>
         </div>
@@ -1086,7 +1195,7 @@
     </footer>
 
     <script>
-        // State Object with Full LocalStorage Persistence
+        // State Object with Full LocalStorage Persistence & Notifications
         let authorState = {
             name: "Полина Сергеева",
             username: "@polina_author",
@@ -1105,7 +1214,66 @@
         ];
 
         let publishedBooksList = [];
+        let notificationsList = [
+            { id: 1, text: "Добро пожаловать в Перо! Создавайте новые книги и главы.", time: "Только что", icon: "fa-feather" }
+        ];
         let activeChapterIndex = 0;
+
+        // Notifications UI System
+        function addNotification(text, icon = "fa-bell") {
+            const newNotif = {
+                id: Date.now(),
+                text: text,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                icon: icon
+            };
+            notificationsList.unshift(newNotif);
+            saveToLocalStorage();
+            renderNotificationsUI();
+        }
+
+        function renderNotificationsUI() {
+            const listEl = document.getElementById('notifList');
+            const badgeEl = document.getElementById('notifBadgeCount');
+            if (!listEl) return;
+
+            if (notificationsList.length > 0) {
+                if (badgeEl) {
+                    badgeEl.innerText = notificationsList.length;
+                    badgeEl.style.display = 'flex';
+                }
+                listEl.innerHTML = '';
+                notificationsList.forEach(n => {
+                    const item = document.createElement('div');
+                    item.className = 'notif-item';
+                    item.innerHTML = '<i class="fa-solid ' + n.icon + '"></i><div><div>' + n.text + '</div><div class="notif-time">' + n.time + '</div></div>';
+                    listEl.appendChild(item);
+                });
+            } else {
+                if (badgeEl) badgeEl.style.display = 'none';
+                listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--muted-text); font-size: 13px;">Пока нет новых уведомлений.</div>';
+            }
+        }
+
+        function toggleNotificationsPanel(e) {
+            e.stopPropagation();
+            const panel = document.getElementById('notifDropdown');
+            if (panel) panel.classList.toggle('active');
+        }
+
+        function clearNotifications() {
+            notificationsList = [];
+            saveToLocalStorage();
+            renderNotificationsUI();
+        }
+
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('notifDropdown');
+            const bell = document.getElementById('notifBellBtn');
+            if (panel && bell && !panel.contains(e.target) && !bell.contains(e.target)) {
+                panel.classList.remove('active');
+            }
+        });
 
         // Auto-save typing input on paper editor
         function onPaperEditorInput() {
@@ -1120,7 +1288,6 @@
         // Save All State to localStorage
         function saveToLocalStorage() {
             try {
-                // Save current editor HTML into current active chapter
                 const editor = document.getElementById('paperEditor');
                 if (editor && sampleChapters[activeChapterIndex]) {
                     sampleChapters[activeChapterIndex].content = editor.innerHTML;
@@ -1128,9 +1295,10 @@
 
                 authorState.activeChapter = activeChapterIndex;
 
-                localStorage.setItem('pero_authorState_v2', JSON.stringify(authorState));
-                localStorage.setItem('pero_sampleChapters_v2', JSON.stringify(sampleChapters));
-                localStorage.setItem('pero_publishedBooks_v2', JSON.stringify(publishedBooksList));
+                localStorage.setItem('pero_authorState_v3', JSON.stringify(authorState));
+                localStorage.setItem('pero_sampleChapters_v3', JSON.stringify(sampleChapters));
+                localStorage.setItem('pero_publishedBooks_v3', JSON.stringify(publishedBooksList));
+                localStorage.setItem('pero_notifications_v3', JSON.stringify(notificationsList));
             } catch(e) {
                 console.error("LocalStorage save error:", e);
             }
@@ -1139,12 +1307,12 @@
         // Load All State from localStorage
         function loadFromLocalStorage() {
             try {
-                const savedState = localStorage.getItem('pero_authorState_v2');
+                const savedState = localStorage.getItem('pero_authorState_v3');
                 if (savedState) {
                     authorState = Object.assign(authorState, JSON.parse(savedState));
                 }
 
-                const savedChapters = localStorage.getItem('pero_sampleChapters_v2');
+                const savedChapters = localStorage.getItem('pero_sampleChapters_v3');
                 if (savedChapters) {
                     const parsed = JSON.parse(savedChapters);
                     if (Array.isArray(parsed) && parsed.length > 0) {
@@ -1153,12 +1321,16 @@
                     }
                 }
 
-                const savedBooks = localStorage.getItem('pero_publishedBooks_v2');
+                const savedBooks = localStorage.getItem('pero_publishedBooks_v3');
                 if (savedBooks) {
                     const parsedB = JSON.parse(savedBooks);
-                    if (Array.isArray(parsedB)) {
-                        publishedBooksList = parsedB;
-                    }
+                    if (Array.isArray(parsedB)) publishedBooksList = parsedB;
+                }
+
+                const savedNotifs = localStorage.getItem('pero_notifications_v3');
+                if (savedNotifs) {
+                    const parsedN = JSON.parse(savedNotifs);
+                    if (Array.isArray(parsedN)) notificationsList = parsedN;
                 }
 
                 if (typeof authorState.activeChapter === 'number' && authorState.activeChapter < sampleChapters.length) {
@@ -1205,8 +1377,9 @@
                 if (icon) icon.className = 'fa-solid fa-sun';
             }
 
-            // Apply Counters
+            // Apply Counters & Notifications
             updateAuthorUI();
+            renderNotificationsUI();
 
             // Render Published Books
             renderPublishedBooks();
@@ -1222,6 +1395,7 @@
 
         function renderPublishedBooks() {
             const container = document.getElementById('myPublishedBooksList');
+            const catalogContainer = document.getElementById('catalogBooksList');
             const emptyMsg = document.getElementById('emptyBooksMsg');
             if (!container) return;
 
@@ -1229,13 +1403,47 @@
                 if (emptyMsg) emptyMsg.style.display = 'none';
                 container.querySelectorAll('.book-card').forEach(c => c.remove());
 
-                publishedBooksList.forEach(b => {
+                publishedBooksList.forEach((b, idx) => {
                     const card = document.createElement('div');
                     card.className = 'book-card';
-                    card.innerHTML = '<div class="book-cover">' + b.title + '</div><div class="book-info"><div class="book-genre">' + b.genre + '</div><div class="book-title">' + b.title + '</div><div class="book-author">' + b.author + '</div></div>';
+                    card.onclick = function() { openBookModal(b.title, b.author, b.genre, '1.2k', '5.0', b.content || 'Текст книги...'); };
+
+                    card.innerHTML = `
+                        <div class="book-cover">${b.title}</div>
+                        <div class="book-info">
+                            <div class="book-genre">${b.genre}</div>
+                            <div class="book-title">${b.title}</div>
+                            <div class="book-author">${b.author}</div>
+                            <div style="margin-top: auto; padding-top: 10px;">
+                                <button class="btn-primary" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;" onclick="event.stopPropagation(); continueWritingBook(${idx})">
+                                    <i class="fa-solid fa-pen-to-square"></i> Продолжить писать
+                                </button>
+                            </div>
+                        </div>
+                    `;
                     container.appendChild(card);
+
+                    // Add to Catalog if not present
+                    if (catalogContainer && !document.getElementById('catalog-book-' + idx)) {
+                        const catCard = card.cloneNode(true);
+                        catCard.id = 'catalog-book-' + idx;
+                        catCard.onclick = function() { openBookModal(b.title, b.author, b.genre, '1.2k', '5.0', b.content || 'Текст книги...'); };
+                        catalogContainer.appendChild(catCard);
+                    }
                 });
             }
+        }
+
+        function continueWritingBook(idx) {
+            showTab('write', document.querySelectorAll('.nav-btn')[2]);
+            if (publishedBooksList[idx]) {
+                selectEditorChapter(0, document.querySelectorAll('#chapterList .chapter-card')[0]);
+            }
+        }
+
+        function continueWritingBookFromModal() {
+            closeBookModal();
+            showTab('write', document.querySelectorAll('.nav-btn')[2]);
         }
 
         function triggerAvatarUpload() {
@@ -1274,6 +1482,7 @@
 
             saveToLocalStorage();
             closeEditProfileModal();
+            addNotification("📝 Автор " + authorState.name + " обновил профиль и био", "fa-user-pen");
             alert('🎉 Профиль и био автора успешно сохранены!');
         }
 
@@ -1305,6 +1514,7 @@
 
             const chTitle = sampleChapters[index]?.title || 'эту главу';
             if (confirm('Вы уверены, что хотите удалить «' + chTitle + '»?')) {
+                const deletedName = sampleChapters[index].title;
                 sampleChapters.splice(index, 1);
                 
                 sampleChapters.forEach((c, i) => {
@@ -1320,6 +1530,7 @@
                 saveToLocalStorage();
                 renderChaptersList();
                 selectEditorChapter(activeChapterIndex, document.querySelectorAll('#chapterList .chapter-card')[activeChapterIndex]);
+                addNotification("🗑️ Удалена глава «" + deletedName + "» из рукописи", "fa-trash");
             }
         }
 
@@ -1336,6 +1547,7 @@
             saveToLocalStorage();
             renderChaptersList();
             selectEditorChapter(activeChapterIndex, document.querySelectorAll('#chapterList .chapter-card')[activeChapterIndex]);
+            addNotification("✨ Автор добавил новую главу: «" + newTitle + "»", "fa-file-circle-plus");
         }
 
         const aiPlotVariations = {
@@ -1398,6 +1610,7 @@
             if (authorState.isFollowed) {
                 authorState.followers += 1;
                 if (btnElem) btnElem.innerHTML = '<i class="fa-solid fa-check"></i> Вы подписаны';
+                addNotification("👤 Новый подписчик присоединился к вашему аккаунту!", "fa-user-plus");
             } else {
                 authorState.followers = Math.max(0, authorState.followers - 1);
                 if (btnElem) btnElem.innerHTML = '<i class="fa-solid fa-user-plus"></i> Подписаться';
@@ -1414,19 +1627,26 @@
             authorState.likes += 1;
             saveToLocalStorage();
             updateAuthorUI();
+            addNotification("❤️ Ваша книга получила новый лайк!", "fa-heart");
         }
 
         function publishBook() {
             authorState.books += 1;
+            const bookTitle = "Моя книга " + authorState.books;
+            const currentContent = sampleChapters[activeChapterIndex] ? sampleChapters[activeChapterIndex].content : "";
+            
             publishedBooksList.push({
-                title: "Моя книга " + authorState.books,
+                title: bookTitle,
                 genre: "Роман",
-                author: authorState.name
+                author: authorState.name,
+                content: currentContent
             });
+            
             saveToLocalStorage();
             updateAuthorUI();
             renderPublishedBooks();
-            alert('🎉 Книга опубликована!');
+            addNotification("🎉 Автор " + authorState.name + " опубликовал книгу «" + bookTitle + "»!", "fa-cloud-arrow-up");
+            alert('🎉 Книга «' + bookTitle + '» успешно опубликована!');
         }
 
         function openEditProfileModal() { document.getElementById('editProfileModal').classList.add('active'); }
@@ -1492,6 +1712,7 @@
             document.getElementById('modalAuthor').innerText = author;
             document.getElementById('modalGenre').innerText = genre;
             document.getElementById('modalCover').innerText = title;
+            if (desc) document.getElementById('modalBookContent').innerHTML = desc;
             document.getElementById('bookModal').classList.add('active');
         }
 
