@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Перо — Литературная платформа и редактор книг</title>
-    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, редактирование названия книги в начале письма, автосохранение всех данных.">
+    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, идеальная адаптивность под мобильные телефоны и ПК.">
     
     <!-- FAST SYNCHRONOUS THEME RESTORE TO PREVENT FLICKER -->
     <script>
@@ -81,6 +81,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
 
         h1, h2, h3, .font-display {
@@ -133,6 +134,7 @@
             cursor: pointer;
             border: none;
             background: transparent;
+            white-space: nowrap;
         }
 
         .nav-btn:hover, .nav-btn.active {
@@ -154,6 +156,7 @@
             justify-content: center;
             cursor: pointer;
             position: relative;
+            flex-shrink: 0;
         }
 
         .icon-btn:hover {
@@ -242,6 +245,7 @@
             align-items: center;
             gap: 8px;
             box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+            white-space: nowrap;
         }
 
         .btn-primary:hover { background-color: var(--primary-accent-hover); }
@@ -258,6 +262,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
         }
 
         .btn-outline:hover {
@@ -755,6 +760,131 @@
             font-size: 14px;
             color: var(--muted-text);
         }
+
+        /* FULL MOBILE & TABLET RESPONSIVE SYSTEM (SMARTPHONES & PCS) */
+        @media (max-width: 992px) {
+            .word-editor-wrapper {
+                grid-template-columns: 240px 1fr;
+            }
+            .ai-sidebar {
+                grid-column: 1 / -1;
+                border-left: none;
+                border-top: 1px solid var(--card-border);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 12px;
+            }
+
+            .nav-wrapper {
+                flex-direction: column;
+                height: auto;
+                padding: 10px 0;
+                gap: 12px;
+            }
+
+            .nav-links {
+                width: 100%;
+                overflow-x: auto;
+                white-space: nowrap;
+                padding-bottom: 6px;
+                -webkit-overflow-scrolling: touch;
+                justify-content: flex-start;
+            }
+
+            .nav-btn {
+                padding: 6px 12px;
+                font-size: 13px;
+                flex-shrink: 0;
+            }
+
+            .nav-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .hero p {
+                font-size: 15px;
+            }
+
+            .grid-5 {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 12px;
+            }
+
+            .book-cover {
+                height: 170px;
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            .book-info {
+                padding: 10px;
+            }
+
+            .book-title {
+                font-size: 14px;
+            }
+
+            .author-profile-card {
+                flex-direction: column;
+                padding: 20px;
+                text-align: center;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .author-stats-row {
+                justify-content: center;
+            }
+
+            .word-editor-wrapper {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .editor-sidebar {
+                border-right: none;
+                border-bottom: 1px solid var(--card-border);
+            }
+
+            .word-toolbar {
+                padding: 8px;
+                gap: 4px;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .toolbar-group {
+                padding-right: 6px;
+            }
+
+            .document-viewport {
+                padding: 16px 8px;
+            }
+
+            .paper-sheet {
+                padding: 24px 16px;
+                min-height: 500px;
+                font-size: 16px;
+            }
+
+            .notif-dropdown {
+                width: 290px;
+                right: -20px;
+            }
+
+            .modal-content {
+                padding: 20px 16px;
+                border-radius: 16px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -818,7 +948,7 @@
                 </div>
                 <h1>Истории, которые хочется писать.<br><span style="color: var(--primary-accent);">Истории, которые хочется читать.</span></h1>
                 <p>Создавай свои книги в продвинутом Word-редакторе со всеми нужными функциями!</p>
-                <div style="display: flex; gap: 12px;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                     <button class="btn-primary" onclick="showTab('write', document.querySelectorAll('.nav-btn')[2])">Начать писать <i class="fa-solid fa-arrow-right"></i></button>
                     <button class="btn-outline" onclick="showTab('profile', document.querySelectorAll('.nav-btn')[3])">Мой профиль автора</button>
                 </div>
@@ -893,9 +1023,9 @@
                             <span><strong id="statLikes">0</strong> лайков</span>
                         </div>
                     </div>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <button class="btn-primary" onclick="triggerAvatarUpload()"><i class="fa-solid fa-upload"></i> Загрузить фото</button>
-                        <button class="btn-outline" onclick="openEditProfileModal()"><i class="fa-solid fa-pen"></i> Редактировать профиль</button>
+                    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 240px;">
+                        <button class="btn-primary" style="justify-content: center;" onclick="triggerAvatarUpload()"><i class="fa-solid fa-upload"></i> Загрузить фото</button>
+                        <button class="btn-outline" style="justify-content: center;" onclick="openEditProfileModal()"><i class="fa-solid fa-pen"></i> Редактировать профиль</button>
                     </div>
                 </div>
 
@@ -930,12 +1060,12 @@
         <!-- TAB 4: WRITE STUDIO WITH BOOK TITLE AND GENRE EDITOR BAR AT THE START OF WRITING -->
         <div id="tab-write" class="tab-page">
             <section class="section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
                     <div>
-                        <h1 style="font-size: 30px; font-weight: 700;">Кабинет автора — Редактор рукописи с AI</h1>
+                        <h1 style="font-size: 28px; font-weight: 700;">Кабинет автора — Редактор рукописи с AI</h1>
                         <p style="color: var(--muted-text); font-size: 14px;">Автоматическое сохранение названий, данных профиля, биографии и рукописи при написании.</p>
                     </div>
-                    <div style="display: flex; gap: 8px;">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <button class="btn-primary" onclick="toggleAiPanel()"><i class="fa-solid fa-wand-magic-sparkles"></i> AI-помощник</button>
                         <button class="btn-outline" onclick="exportDocument('txt')"><i class="fa-solid fa-file-arrow-down"></i> Экспорт TXT</button>
                         <button class="btn-primary" onclick="publishBook()"><i class="fa-solid fa-cloud-arrow-up"></i> Опубликовать книгу</button>
@@ -945,11 +1075,11 @@
                 <!-- EDITABLE BOOK TITLE & GENRE BAR AT THE START OF WRITING -->
                 <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 16px 20px; border-radius: 16px; margin-bottom: 16px; display: flex; gap: 16px; align-items: center; box-shadow: var(--shadow-soft); flex-wrap: wrap;">
                     <div style="font-size: 24px; color: var(--primary-accent);"><i class="fa-solid fa-book-bookmark"></i></div>
-                    <div style="flex: 1; min-width: 280px;">
+                    <div style="flex: 1; min-width: 240px;">
                         <label style="font-size: 11px; font-weight: 700; color: var(--muted-text); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Название вашей книги в начале письма:</label>
                         <input type="text" class="ai-textarea" id="manuscriptBookTitleInput" style="font-size: 18px; font-weight: 700; padding: 8px 12px;" value="Моя новая книга" placeholder="Введите название вашей книги..." oninput="onBookTitleChange(this.value)">
                     </div>
-                    <div style="width: 200px;">
+                    <div style="width: 180px;">
                         <label style="font-size: 11px; font-weight: 700; color: var(--muted-text); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">Жанр книги:</label>
                         <select class="tool-select" id="manuscriptBookGenreSelect" style="width: 100%; height: 38px; font-size: 14px;" onchange="onBookGenreChange(this.value)">
                             <option value="Роман" selected>Роман</option>
@@ -1234,7 +1364,7 @@
     </footer>
 
     <script>
-        // State Object with Full LocalStorage Persistence, Customizable Book Title & Genre
+        // State Object with Full LocalStorage Persistence, Mobile Adaptability, Book Title & Genre
         let authorState = {
             name: "Моё Имя Автора",
             username: "@author",
