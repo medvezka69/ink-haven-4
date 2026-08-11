@@ -153,7 +153,7 @@ function WriteHome() {
               <div className="min-w-0 flex-1">
                 <p className="font-display truncate font-semibold">{b.title}</p>
                 <p className="text-xs text-muted-foreground">
-                  {b.genre} · {b.status === "published" ? "Опубликована" : b.status === "completed" ? "Завершена" : "Черновик"}
+                  {b.genre} · {b.status === "draft" ? "Черновик" : b.status === "unlisted" ? "По ссылке" : "Опубликована"}
                 </p>
                 <div className="mt-2 flex gap-3 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
