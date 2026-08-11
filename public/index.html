@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Перо — Литературная платформа и редактор книг</title>
-    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, удобная мобильная версия с фиксированной панелью и нижней навигацией.">
+    <meta name="description" content="Платформа для писателей и читателей: редактор книг в стиле MS Word, живой поиск авторов и книг на ПК и мобильных.">
     
     <!-- FAST SYNCHRONOUS THEME RESTORE TO PREVENT FLICKER -->
     <script>
@@ -142,7 +142,7 @@
             color: var(--text-color);
         }
 
-        .nav-actions { display: flex; align-items: center; gap: 12px; }
+        .nav-actions { display: flex; align-items: center; gap: 10px; }
 
         .icon-btn {
             width: 40px;
@@ -846,7 +846,11 @@
             }
 
             .nav-actions {
-                gap: 8px;
+                gap: 6px;
+            }
+
+            .header-search-box {
+                width: 120px !important;
             }
 
             .hero {
@@ -946,7 +950,7 @@
         <div class="container nav-wrapper">
             <div class="logo" onclick="showTab('home', document.querySelectorAll('.nav-btn')[0])">Перо<span>.</span></div>
             
-            <!-- Desktop Nav Links (Hidden on phones, replaced by fixed bottom nav) -->
+            <!-- Desktop Nav Links -->
             <nav class="nav-links">
                 <button class="nav-btn active" onclick="showTab('home', this)">Главная</button>
                 <button class="nav-btn" onclick="showTab('read', this)">Читать</button>
@@ -957,7 +961,13 @@
             </nav>
 
             <div class="nav-actions">
-                
+
+                <!-- REAL-TIME LIVE SEARCH BAR IN HEADER FOR BOTH MOBILE AND DESKTOP -->
+                <div style="position: relative; display: flex; align-items: center;">
+                    <input type="text" id="headerSearchInput" class="ai-textarea header-search-box" style="padding: 6px 12px 6px 30px; border-radius: 20px; font-size: 12px; width: 160px; height: 36px;" placeholder="Поиск авторов и книг..." oninput="handleSearch(this.value)">
+                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; color: var(--primary-accent); font-size: 12px; pointer-events: none;"></i>
+                </div>
+
                 <!-- Notification Bell with Instant Live Badge & Panel -->
                 <div style="position: relative;">
                     <button class="icon-btn" onclick="toggleNotificationsPanel(event)" id="notifBellBtn" title="Уведомления об обновлениях">
@@ -1012,23 +1022,8 @@
                     <h2 class="section-title">Сейчас популярно</h2>
                     <a href="#" style="color: var(--primary-accent); font-size: 14px; font-weight: 600;" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">Весь каталог</a>
                 </div>
-                <div class="grid-5">
-                    <div class="book-card" onclick="openBookModal('Тень Забытого Замка', 'Александр Грин', 'Фэнтези', '14.2k', '4.9', 'В глубине проклятого леса стоит древний замок...')">
-                        <div class="book-cover">
-                            <span class="book-cover-badge">Читать и комментировать</span>
-                            Тень Забытого Замка
-                        </div>
-                        <div class="book-info">
-                            <div class="book-genre">Фэнтези</div>
-                            <div class="book-title">Тень Забытого Замка</div>
-                            <div class="book-author">Александр Грин</div>
-                            <div class="book-stats">
-                                <span><i class="fa-regular fa-eye"></i> <span class="card-views-count">0</span></span>
-                                <span onclick="likeBook(event, this)"><i class="fa-regular fa-heart"></i> <span class="card-likes-count">0</span></span>
-                                <span><i class="fa-regular fa-star"></i> 5.0</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="grid-5" id="homePopularBooksGrid">
+                    <!-- Featured popular books populate here -->
                 </div>
             </section>
 
@@ -1038,17 +1033,17 @@
                     <h2 class="section-title">Жанры</h2>
                 </div>
                 <div class="genre-chips">
-                    <div class="genre-chip" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">💌 Романтика</div>
-                    <div class="genre-chip" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">🎭 Драма</div>
-                    <div class="genre-chip" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">🗝️ Фэнтези</div>
-                    <div class="genre-chip" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">🛰️ Фантастика</div>
-                    <div class="genre-chip" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">🌒 Триллер</div>
-                    <div class="genre-chip" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">🔍 Детектив</div>
-                    <div class="genre-chip" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">🧭 Приключения</div>
-                    <div class="genre-chip" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">🕯️ Ужасы</div>
-                    <div class="genre-chip" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">🌱 Young Adult</div>
-                    <div class="genre-chip" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">🎈 Комедия</div>
-                    <div class="genre-chip" onclick="showTab('read', document.querySelectorAll('.nav-btn')[1])">🪶 Поэзия</div>
+                    <div class="genre-chip" onclick="filterByGenre('Романтика')">💌 Романтика</div>
+                    <div class="genre-chip" onclick="filterByGenre('Драма')">🎭 Драма</div>
+                    <div class="genre-chip" onclick="filterByGenre('Фэнтези')">🗝️ Фэнтези</div>
+                    <div class="genre-chip" onclick="filterByGenre('Фантастика')">🛰️ Фантастика</div>
+                    <div class="genre-chip" onclick="filterByGenre('Триллер')">🌒 Триллер</div>
+                    <div class="genre-chip" onclick="filterByGenre('Детектив')">🔍 Детектив</div>
+                    <div class="genre-chip" onclick="filterByGenre('Приключения')">🧭 Приключения</div>
+                    <div class="genre-chip" onclick="filterByGenre('Ужасы')">🕯️ Ужасы</div>
+                    <div class="genre-chip" onclick="filterByGenre('Young Adult')">🌱 Young Adult</div>
+                    <div class="genre-chip" onclick="filterByGenre('Комедия')">🎈 Комедия</div>
+                    <div class="genre-chip" onclick="filterByGenre('Поэзия')">🪶 Поэзия</div>
                 </div>
             </section>
         </div>
@@ -1091,20 +1086,35 @@
             </section>
         </div>
 
-        <!-- TAB 3: READ / CATALOG -->
+        <!-- TAB 3: READ / CATALOG WITH PROMINENT LIVE SEARCH BAR -->
         <div id="tab-read" class="tab-page">
             <section class="section">
-                <h1 style="font-size: 32px; margin-bottom: 8px;">Каталог книг</h1>
-                <p style="color: var(--muted-text); margin-bottom: 24px;">Нажмите на любую книгу, чтобы открыть её.</p>
-                <div class="grid-5" id="catalogBooksList">
-                    <div class="book-card" onclick="openBookModal('Тень Забытого Замка', 'Александр Грин', 'Фэнтези', '0', '5.0', 'В глубине проклятого леса стоит древний замок...')">
-                        <div class="book-cover">Тень Забытого Замка</div>
-                        <div class="book-info">
-                            <div class="book-genre">Фэнтези</div>
-                            <div class="book-title">Тень Забытого Замка</div>
-                            <div class="book-author">Александр Грин</div>
-                        </div>
+                <h1 style="font-size: 32px; margin-bottom: 8px;">Каталог и поиск книг</h1>
+                <p style="color: var(--muted-text); margin-bottom: 20px;">Ищите книги по названию, автору или жанру в реальном времени.</p>
+                
+                <!-- PROMINENT SEARCH AND FILTER BAR -->
+                <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 16px; border-radius: 16px; margin-bottom: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; box-shadow: var(--shadow-soft);">
+                    <div style="position: relative; flex: 1; min-width: 220px;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 13px; color: var(--primary-accent); font-size: 15px;"></i>
+                        <input type="text" id="catalogSearchInput" class="ai-textarea" style="padding: 10px 14px 10px 40px; border-radius: 12px; font-size: 14px; font-weight: 500;" placeholder="Поиск книг или авторов (например: Александр Грин)..." oninput="handleSearch(this.value)">
                     </div>
+                    <div style="min-width: 160px;">
+                        <select class="tool-select" id="genreFilterSelect" style="width: 100%; height: 42px; border-radius: 12px; font-size: 13px;" onchange="handleGenreFilter(this.value)">
+                            <option value="all" selected>Все жанры</option>
+                            <option value="Фэнтези">Фэнтези</option>
+                            <option value="Роман">Роман</option>
+                            <option value="Фантастика">Фантастика</option>
+                            <option value="Детектив">Детектив</option>
+                            <option value="Триллер">Триллер</option>
+                            <option value="Драма">Драма</option>
+                            <option value="Приключения">Приключения</option>
+                            <option value="Поэзия">Поэзия</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid-5" id="catalogBooksList">
+                    <!-- Books render here dynamically via live search -->
                 </div>
             </section>
         </div>
@@ -1355,7 +1365,7 @@
         </button>
         <button class="mobile-nav-item" onclick="showTab('read', this, true)">
             <i class="fa-solid fa-book-open"></i>
-            <span>Читать</span>
+            <span>Поиск</span>
         </button>
         <button class="mobile-nav-item" onclick="showTab('write', this, true)">
             <i class="fa-solid fa-pen-nib"></i>
@@ -1440,7 +1450,15 @@
     </footer>
 
     <script>
-        // State Object with Full LocalStorage Persistence, Mobile Adaptability, Book Title & Genre
+        // Featured Popular Books Library Engine
+        const featuredPlatformBooks = [
+            { id: 'f1', title: "Тень Забытого Замка", author: "Александр Грин", genre: "Фэнтези", views: "14.2k", rating: "4.9", content: "В глубине проклятого леса стоит древний замок, окутанный тайнами и легендами прошлого..." },
+            { id: 'f2', title: "Эхо Звёздного Ветра", author: "Елена Левицкая", genre: "Фантастика", views: "9.8k", rating: "4.8", content: "Космический корабль «Орион» приблизился к неизведанной планете на краю туманности..." },
+            { id: 'f3', title: "Шёпот Проклятого Озера", author: "Виктор Громов", genre: "Триллер", views: "18.5k", rating: "5.0", content: "Каждую полночь над заброшенной деревней поднимался туман, из которого доносились странные голоса..." },
+            { id: 'f4', title: "Дневник Небесного Архитектора", author: "София Блейк", genre: "Романтика", views: "11.1k", rating: "4.9", content: "Он проектировал мосты между городами, не подозревая, что построит главный мост в своём сердце..." }
+        ];
+
+        // State Object with Full LocalStorage Persistence & Live Search
         let authorState = {
             name: "Моё Имя Автора",
             username: "@author",
@@ -1465,6 +1483,8 @@
             { id: 1, text: "Добро пожаловать в Перо! Создавайте новые книги и главы.", time: "Только что", icon: "fa-feather" }
         ];
         let activeChapterIndex = 0;
+        let searchQuery = "";
+        let selectedGenreFilter = "all";
 
         // Real-Time Notification System
         function addNotification(text, icon = "fa-bell") {
@@ -1524,6 +1544,133 @@
                 panel.classList.remove('active');
             }
         });
+
+        // REAL-TIME SEARCH & FILTER ENGINE FOR BOTH MOBILE AND PC
+        function handleSearch(query) {
+            searchQuery = (query || "").toLowerCase().trim();
+            const headerInput = document.getElementById('headerSearchInput');
+            const catalogInput = document.getElementById('catalogSearchInput');
+
+            if (headerInput && headerInput.value !== query) headerInput.value = query;
+            if (catalogInput && catalogInput.value !== query) catalogInput.value = query;
+
+            if (searchQuery.length > 0) {
+                showTab('read', document.querySelectorAll('.nav-btn')[1]);
+            }
+            renderAllBooksGrid();
+        }
+
+        function handleGenreFilter(genre) {
+            selectedGenreFilter = genre;
+            renderAllBooksGrid();
+        }
+
+        function filterByGenre(genre) {
+            selectedGenreFilter = genre;
+            const selectEl = document.getElementById('genreFilterSelect');
+            if (selectEl) selectEl.value = genre;
+            showTab('read', document.querySelectorAll('.nav-btn')[1]);
+            renderAllBooksGrid();
+        }
+
+        function renderAllBooksGrid() {
+            const catalogContainer = document.getElementById('catalogBooksList');
+            const homePopularContainer = document.getElementById('homePopularBooksGrid');
+            if (!catalogContainer) return;
+
+            // Combine featured books + user published books
+            let allBooks = [].concat(featuredPlatformBooks, publishedBooksList.map((b, idx) => ({
+                id: 'pub_' + idx,
+                title: b.title,
+                author: b.author,
+                genre: b.genre,
+                views: "1.2k",
+                rating: "5.0",
+                content: b.content || "Текст книги...",
+                isUserBook: true,
+                userIndex: idx
+            })));
+
+            // Apply Live Search and Genre Filters
+            let filtered = allBooks.filter(b => {
+                const matchQuery = !searchQuery || 
+                    b.title.toLowerCase().includes(searchQuery) || 
+                    b.author.toLowerCase().includes(searchQuery) || 
+                    b.genre.toLowerCase().includes(searchQuery);
+
+                const matchGenre = (selectedGenreFilter === "all") || (b.genre === selectedGenreFilter);
+                return matchQuery && matchGenre;
+            });
+
+            // Render Catalog Container
+            catalogContainer.innerHTML = '';
+            if (filtered.length === 0) {
+                catalogContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: var(--card-bg); border: 1px dashed var(--card-border); border-radius: 16px; color: var(--muted-text);">
+                        <i class="fa-solid fa-magnifying-glass" style="font-size: 32px; margin-bottom: 12px; color: var(--primary-accent);"></i>
+                        <h3>Книги и авторы не найдены</h3>
+                        <p style="font-size: 13px; margin-top: 4px;">Попробуйте изменить поисковый запрос или выбрать другой жанр.</p>
+                        <button class="btn-outline" style="margin-top: 12px;" onclick="handleSearch(''); handleGenreFilter('all');">Сбросить поиск</button>
+                    </div>
+                `;
+            } else {
+                filtered.forEach(b => {
+                    const isAuthor = (b.author === authorState.name);
+                    const card = document.createElement('div');
+                    card.className = 'book-card';
+                    card.onclick = function() { openBookModal(b.title, b.author, b.genre, b.views, b.rating, b.content, isAuthor, b.userIndex || 0); };
+
+                    let btnHtml = isAuthor ? `
+                        <button class="btn-primary" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;" onclick="event.stopPropagation(); continueWritingBook(${b.userIndex || 0})">
+                            <i class="fa-solid fa-pen-to-square"></i> Продолжить писать
+                        </button>
+                    ` : `
+                        <button class="btn-outline" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;">
+                            <i class="fa-solid fa-book-open"></i> Читать главу
+                        </button>
+                    `;
+
+                    card.innerHTML = `
+                        <div class="book-cover">
+                            <span class="book-cover-badge">${b.genre}</span>
+                            ${b.title}
+                        </div>
+                        <div class="book-info">
+                            <div class="book-genre">${b.genre}</div>
+                            <div class="book-title">${b.title}</div>
+                            <div class="book-author"><i class="fa-regular fa-user"></i> ${b.author}</div>
+                            <div style="margin-top: auto; padding-top: 10px;">
+                                ${btnHtml}
+                            </div>
+                        </div>
+                    `;
+                    catalogContainer.appendChild(card);
+                });
+            }
+
+            // Render Home Popular Grid (First 4 books)
+            if (homePopularContainer) {
+                homePopularContainer.innerHTML = '';
+                allBooks.slice(0, 4).forEach(b => {
+                    const isAuthor = (b.author === authorState.name);
+                    const card = document.createElement('div');
+                    card.className = 'book-card';
+                    card.onclick = function() { openBookModal(b.title, b.author, b.genre, b.views, b.rating, b.content, isAuthor, b.userIndex || 0); };
+                    card.innerHTML = `
+                        <div class="book-cover">
+                            <span class="book-cover-badge">Популярное</span>
+                            ${b.title}
+                        </div>
+                        <div class="book-info">
+                            <div class="book-genre">${b.genre}</div>
+                            <div class="book-title">${b.title}</div>
+                            <div class="book-author"><i class="fa-regular fa-user"></i> ${b.author}</div>
+                        </div>
+                    `;
+                    homePopularContainer.appendChild(card);
+                });
+            }
+        }
 
         // Book Title & Genre Edit at start of writing
         function onBookTitleChange(newTitle) {
@@ -1661,8 +1808,9 @@
             updateAuthorUI();
             renderNotificationsUI();
 
-            // Render Published Books
+            // Render Published Books & Catalog Search Grid
             renderPublishedBooks();
+            renderAllBooksGrid();
 
             // Render Chapters & Editor Content
             renderChaptersList();
@@ -1675,7 +1823,6 @@
 
         function renderPublishedBooks() {
             const container = document.getElementById('myPublishedBooksList');
-            const catalogContainer = document.getElementById('catalogBooksList');
             const emptyMsg = document.getElementById('emptyBooksMsg');
             if (!container) return;
 
@@ -1689,16 +1836,6 @@
                     card.className = 'book-card';
                     card.onclick = function() { openBookModal(b.title, b.author, b.genre, '1.2k', '5.0', b.content || 'Текст книги...', isAuthor, idx); };
 
-                    let actionBtnHtml = isAuthor ? `
-                        <button class="btn-primary" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;" onclick="event.stopPropagation(); continueWritingBook(${idx})">
-                            <i class="fa-solid fa-pen-to-square"></i> Продолжить писать
-                        </button>
-                    ` : `
-                        <button class="btn-outline" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;" onclick="event.stopPropagation(); openBookModal('${b.title}', '${b.author}', '${b.genre}', '1.2k', '5.0', '${b.content || "Текст книги..."}', false, ${idx})">
-                            <i class="fa-solid fa-book-open"></i> Читать главу
-                        </button>
-                    `;
-
                     card.innerHTML = `
                         <div class="book-cover">${b.title}</div>
                         <div class="book-info">
@@ -1706,19 +1843,13 @@
                             <div class="book-title">${b.title}</div>
                             <div class="book-author">${b.author}</div>
                             <div style="margin-top: auto; padding-top: 10px;">
-                                ${actionBtnHtml}
+                                <button class="btn-primary" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px 12px;" onclick="event.stopPropagation(); continueWritingBook(${idx})">
+                                    <i class="fa-solid fa-pen-to-square"></i> Продолжить писать
+                                </button>
                             </div>
                         </div>
                     `;
                     container.appendChild(card);
-
-                    // Add to Catalog if not present
-                    if (catalogContainer && !document.getElementById('catalog-book-' + idx)) {
-                        const catCard = card.cloneNode(true);
-                        catCard.id = 'catalog-book-' + idx;
-                        catCard.onclick = function() { openBookModal(b.title, b.author, b.genre, '1.2k', '5.0', b.content || 'Текст книги...', isAuthor, idx); };
-                        catalogContainer.appendChild(catCard);
-                    }
                 });
             }
         }
@@ -1786,6 +1917,7 @@
             closeEditProfileModal();
             addNotification("📝 Автор " + authorState.name + " обновил профиль и био", "fa-user-pen");
             renderPublishedBooks();
+            renderAllBooksGrid();
             alert('🎉 Профиль и имя автора успешно сохранены!');
         }
 
@@ -1954,6 +2086,7 @@
             saveToLocalStorage();
             updateAuthorUI();
             renderPublishedBooks();
+            renderAllBooksGrid();
             addNotification("🎉 Автор " + authorState.name + " опубликовал книгу «" + customTitle + "»!", "fa-cloud-arrow-up");
             alert('🎉 Книга «' + customTitle + '» успешно опубликована!');
         }
