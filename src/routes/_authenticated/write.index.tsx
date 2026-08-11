@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { BookPlus, PenLine, Eye, Heart } from "lucide-react";
+import { BookPlus, PenLine, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { BookCover, EmptyState } from "@/components/BookCard";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { GENRES, STATUS_LABELS, formatNumber } from "@/lib/constants";
+import { GENRES, GENRE_EMOJI, formatNumber } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/write/")({
   head: () => ({
@@ -38,7 +38,7 @@ function WriteHome() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [genre, setGenre] = useState(GENRES[0]!.name);
+  const [genre, setGenre] = useState<string>(GENRES[0]);
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -48,7 +48,7 @@ function WriteHome() {
     queryFn: async () => {
       const { data } = await supabase
         .from("books")
-        .select("id, title, cover_url, genre, status, views_count, likes_count, updated_at")
+        .select("id, title, cover_url, genre, status, views, updated_at")
         .eq("author_id", user!.id)
         .order("updated_at", { ascending: false });
       return data ?? [];
@@ -122,8 +122,8 @@ function WriteHome() {
                   className="h-10 w-full rounded-md border border-border bg-card px-3 text-sm"
                 >
                   {GENRES.map((g) => (
-                    <option key={g.name} value={g.name}>
-                      {g.emoji} {g.name}
+                    <option key={g} value={g}>
+                      {GENRE_EMOJI[g]} {g}
                     </option>
                   ))}
                 </select>
@@ -153,14 +153,11 @@ function WriteHome() {
               <div className="min-w-0 flex-1">
                 <p className="font-display truncate font-semibold">{b.title}</p>
                 <p className="text-xs text-muted-foreground">
-                  {b.genre} · {STATUS_LABELS[b.status as keyof typeof STATUS_LABELS] ?? b.status}
+                  {b.genre} · {b.status === "published" ? "Опубликована" : b.status === "completed" ? "Завершена" : "Черновик"}
                 </p>
                 <div className="mt-2 flex gap-3 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
-                    <Eye className="size-3" /> {formatNumber(b.views_count)}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Heart className="size-3" /> {formatNumber(b.likes_count)}
+                    <Eye className="size-3" /> {formatNumber(b.views)}
                   </span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
